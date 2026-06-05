@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
 
     // Filter programmatically for low stock threshold
     if (lowStock) {
-      items = items.filter((item) => item.quantity <= item.minThreshold);
+      items = items.filter((item: { quantity: number; minThreshold: number }) => item.quantity <= item.minThreshold);
     }
 
     return NextResponse.json({ status: "success", data: items });
