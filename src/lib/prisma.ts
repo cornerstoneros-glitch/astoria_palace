@@ -298,7 +298,18 @@ CREATE UNIQUE INDEX IF NOT EXISTS "LoyaltyProgram_userId_key" ON "LoyaltyProgram
 CREATE UNIQUE INDEX IF NOT EXISTS "Staff_userId_key" ON "Staff"("userId");
 `;
 
-// ─── Initialisation synchrone du schéma ─────────────────────────────────────
+// ─── Colonnes ajoutées après la migration initiale ───────────────────────────
+// SQLite ne supporte pas ALTER TABLE IF NOT EXISTS — on gère l'erreur manuellement.
+
+const COLUMN_MIGRATIONS = [
+  `ALTER TABLE "RoomType" ADD COLUMN "image" TEXT`,
+  `ALTER TABLE "Staff" ADD COLUMN "salary" REAL NOT NULL DEFAULT 150000`,
+  `ALTER TABLE "Staff" ADD COLUMN "contractType" TEXT NOT NULL DEFAULT 'CDI'`,
+  `ALTER TABLE "Staff" ADD COLUMN "shift" TEXT NOT NULL DEFAULT 'Matin (06h - 14h)'`,
+  `ALTER TABLE "Staff" ADD COLUMN "status" TEXT NOT NULL DEFAULT 'ACTIVE'`,
+  `ALTER TABLE "Transaction" ADD COLUMN "category" TEXT NOT NULL DEFAULT 'GENERAL'`,
+];
+
 
 function ensureSchema(): void {
   try {
@@ -312,10 +323,21 @@ function ensureSchema(): void {
     const db = new Database(dbPath);
     db.pragma("journal_mode = WAL");
     db.pragma("foreign_keys = ON");
+
+    // 1. Créer les tables manquantes
     db.exec(SCHEMA_SQL);
+
+    // 2. Ajouter les colonnes manquantes sur des tables existantes
+    for (const migration of COLUMN_MIGRATIONS) {
+      try {
+        db.prepare(migration).run();
+      } catch {
+        // Colonne déjà existante — ignoré silencieusement
+      }
+    }
+
     db.close();
   } catch (err: any) {
-    // Ne jamais crasher l'app à cause de l'init DB
     console.error("[prisma] Avertissement init schéma:", err?.message);
   }
 }
