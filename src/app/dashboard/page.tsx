@@ -659,11 +659,29 @@ export default function Dashboard() {
               </nav>
             </div>
 
-            <div className="mt-auto pt-6 border-t border-slate-200">
+            <div className="mt-auto pt-6 border-t border-slate-200 flex flex-col gap-3">
               <div className="p-3.5 rounded-lg bg-white border border-slate-200 text-xs shadow-sm">
                 <span className="block font-bold text-slate-500 mb-1">Établissement</span>
                 <span className="block text-[#0d5ca3] font-bold">{sites[0]?.name || "Astoria Palace"}</span>
                 <span className="block text-slate-550 mt-1">{sites[0]?.location || "Yopougon, Abidjan"}</span>
+              </div>
+
+              <div className="p-3.5 rounded-lg bg-amber-500/5 border border-[#c5a059]/35 text-[11px] font-semibold text-slate-700 shadow-sm">
+                <span className="block font-extrabold uppercase tracking-wide text-[#b08b45] mb-2">Structure Officielle</span>
+                <div className="flex flex-col gap-1.5 font-bold">
+                  <div className="flex justify-between">
+                    <span>🛏️ Chambres :</span>
+                    <span className="text-slate-950">70</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>✨ Suites :</span>
+                    <span className="text-slate-950">5</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>👑 S. Présidentielles :</span>
+                    <span className="text-slate-950">2</span>
+                  </div>
+                </div>
               </div>
             </div>
           </aside>
@@ -717,7 +735,12 @@ export default function Dashboard() {
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div>
                     <h2 className="text-xl font-bold font-serif text-slate-900">Heatmap & Statuts des Chambres</h2>
-                    <p className="text-xs text-slate-550">Modifiez le statut des chambres en temps réel pour coordonner la réception et les gouvernantes.</p>
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-550 mt-1.5 font-semibold">
+                      <span>Capacité Officielle :</span>
+                      <span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 font-extrabold border border-slate-200">70 Chambres</span>
+                      <span className="px-2 py-0.5 rounded-full bg-[#c5a059]/10 text-[#b08b45] font-extrabold border border-[#c5a059]/20">5 Suites</span>
+                      <span className="px-2 py-0.5 rounded-full bg-indigo-50 border border-indigo-200 text-indigo-750 font-extrabold">2 Suites Présidentielles</span>
+                    </div>
                   </div>
                   
                   {/* Legend colors */}

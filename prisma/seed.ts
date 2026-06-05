@@ -109,32 +109,80 @@ async function main() {
 
   console.log("Room types created.");
 
-  // 5. Create Rooms
-  const roomsData = [
-    // Standard rooms
-    { number: "101", roomTypeId: standard.id, siteId: site.id, status: "AVAILABLE" },
-    { number: "102", roomTypeId: standard.id, siteId: site.id, status: "AVAILABLE" },
-    { number: "103", roomTypeId: standard.id, siteId: site.id, status: "AVAILABLE" },
-    { number: "104", roomTypeId: standard.id, siteId: site.id, status: "AVAILABLE" },
-    { number: "105", roomTypeId: standard.id, siteId: site.id, status: "CLEANING" },
-    // Superior rooms
-    { number: "201", roomTypeId: superior.id, siteId: site.id, status: "AVAILABLE" },
-    { number: "202", roomTypeId: superior.id, siteId: site.id, status: "AVAILABLE" },
-    { number: "203", roomTypeId: superior.id, siteId: site.id, status: "OCCUPIED" },
-    { number: "204", roomTypeId: superior.id, siteId: site.id, status: "MAINTENANCE" },
-    // Junior Suites
-    { number: "301", roomTypeId: juniorSuite.id, siteId: site.id, status: "AVAILABLE" },
-    { number: "302", roomTypeId: juniorSuite.id, siteId: site.id, status: "OCCUPIED" },
-    // Executive Suites
-    { number: "401", roomTypeId: executiveSuite.id, siteId: site.id, status: "AVAILABLE" },
-    // Presidential Suite
-    { number: "501", roomTypeId: presidentialSuite.id, siteId: site.id, status: "AVAILABLE" },
-  ];
-
-  for (const r of roomsData) {
-    await prisma.room.create({ data: r });
+  // 5. Create Rooms: 70 standard/superior rooms, 5 suites, 2 presidential suites (Total 77 rooms)
+  // 40 Standard rooms (101 - 140)
+  for (let i = 101; i <= 140; i++) {
+    let status = "AVAILABLE";
+    if (i === 105) status = "CLEANING";
+    if (i === 112 || i === 124 || i === 136) status = "OCCUPIED";
+    await prisma.room.create({
+      data: {
+        number: i.toString(),
+        roomTypeId: standard.id,
+        siteId: site.id,
+        status,
+      }
+    });
   }
-  console.log("Rooms seeded.");
+
+  // 30 Superior rooms (201 - 230)
+  for (let i = 201; i <= 230; i++) {
+    let status = "AVAILABLE";
+    if (i === 204) status = "MAINTENANCE";
+    if (i === 208 || i === 220) status = "OCCUPIED";
+    if (i === 215) status = "CLEANING";
+    await prisma.room.create({
+      data: {
+        number: i.toString(),
+        roomTypeId: superior.id,
+        siteId: site.id,
+        status,
+      }
+    });
+  }
+
+  // 3 Junior Suites (301 - 303)
+  for (let i = 301; i <= 303; i++) {
+    let status = "AVAILABLE";
+    if (i === 302) status = "OCCUPIED";
+    await prisma.room.create({
+      data: {
+        number: i.toString(),
+        roomTypeId: juniorSuite.id,
+        siteId: site.id,
+        status,
+      }
+    });
+  }
+
+  // 2 Executive Suites (401 - 402)
+  for (let i = 401; i <= 402; i++) {
+    let status = "AVAILABLE";
+    if (i === 402) status = "CLEANING";
+    await prisma.room.create({
+      data: {
+        number: i.toString(),
+        roomTypeId: executiveSuite.id,
+        siteId: site.id,
+        status,
+      }
+    });
+  }
+
+  // 2 Presidential Suites (501 - 502)
+  for (let i = 501; i <= 502; i++) {
+    let status = "AVAILABLE";
+    if (i === 502) status = "OCCUPIED";
+    await prisma.room.create({
+      data: {
+        number: i.toString(),
+        roomTypeId: presidentialSuite.id,
+        siteId: site.id,
+        status,
+      }
+    });
+  }
+  console.log("Rooms seeded: 70 standard/superior, 5 suites, 2 presidential suites.");
 
   // 6. Create Users & Staff (HR records)
   const adminUser = await prisma.user.create({
