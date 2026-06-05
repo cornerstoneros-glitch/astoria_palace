@@ -8,11 +8,13 @@ export async function GET(request: NextRequest) {
     const userId = searchParams.get("userId");
     const type = searchParams.get("type");
     const status = searchParams.get("status");
+    const category = searchParams.get("category");
 
     const where: any = {};
     if (userId) where.userId = userId;
     if (type) where.type = type;
     if (status) where.status = status;
+    if (category) where.category = category;
 
     const transactions = await prisma.transaction.findMany({
       where,
@@ -40,29 +42,31 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST /api/transactions - Log a new transaction (invoice, payment, refund)
+// POST /api/transactions - Log a new transaction (invoice, payment, refund, expense)
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { amount, type, status, description, userId } = body;
+    const { amount, type, status, description, userId, category } = body;
 
-    if (amount === undefined || !type || !userId) {
+    if (amount === undefined || !type) {
       return NextResponse.json(
-        { status: "error", message: "Missing required fields: amount, type, userId" },
+        { status: "error", message: "Missing required fields: amount, type" },
         { status: 400 }
       );
     }
 
-    // Verify User exists
-    const userExists = await prisma.user.findUnique({
-      where: { id: userId },
-    });
+    // Verify User exists if provided
+    if (userId) {
+      const userExists = await prisma.user.findUnique({
+        where: { id: userId },
+      });
 
-    if (!userExists) {
-      return NextResponse.json(
-        { status: "error", message: "User not found" },
-        { status: 404 }
-      );
+      if (!userExists) {
+        return NextResponse.json(
+          { status: "error", message: "User not found" },
+          { status: 404 }
+        );
+      }
     }
 
     const transaction = await prisma.transaction.create({
@@ -71,7 +75,8 @@ export async function POST(request: NextRequest) {
         type,
         status: status || "PENDING",
         description,
-        userId,
+        userId: userId || null,
+        category: category || "GENERAL",
       },
       include: {
         user: {

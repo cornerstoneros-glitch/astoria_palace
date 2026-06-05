@@ -4,16 +4,24 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 
 export default function Dashboard() {
+  // Database datasets
   const [rooms, setRooms] = useState<any[]>([]);
   const [reservations, setReservations] = useState<any[]>([]);
   const [concierge, setConcierge] = useState<any[]>([]);
   const [inventory, setInventory] = useState<any[]>([]);
+  const [staff, setStaff] = useState<any[]>([]);
+  const [orders, setOrders] = useState<any[]>([]);
+  const [halls, setHalls] = useState<any[]>([]);
+  const [hallBookings, setHallBookings] = useState<any[]>([]);
+  const [transactions, setTransactions] = useState<any[]>([]);
+  const [dishes, setDishes] = useState<any[]>([]);
+  
   const [roomTypes, setRoomTypes] = useState<any[]>([]);
   const [sites, setSites] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
   const [settings, setSettings] = useState<any>({});
   
-  // Tab Navigation
+  // Tab Navigation (rooms, hr, accounting, inventory, restaurant, halls)
   const [activeTab, setActiveTab] = useState<string>("rooms");
 
   // Load States
@@ -21,6 +29,7 @@ export default function Dashboard() {
   const [error, setError] = useState<string | null>(null);
 
   // Form States
+  // 1. Room Booking Form
   const [newBooking, setNewBooking] = useState({
     clientId: "",
     roomId: "",
@@ -30,7 +39,7 @@ export default function Dashboard() {
   const [bookingError, setBookingError] = useState<string | null>(null);
   const [bookingSuccess, setBookingSuccess] = useState<string | null>(null);
 
-  // KYC Modal States
+  // 2. KYC Modal States
   const [kycResId, setKycResId] = useState<string | null>(null);
   const [kycForm, setKycForm] = useState({
     idType: "CNI",
@@ -38,13 +47,66 @@ export default function Dashboard() {
     idExpiry: "",
   });
 
+  // 3. Staff Form (RH)
+  const [newStaffForm, setNewStaffForm] = useState({
+    name: "",
+    email: "",
+    position: "Waiter",
+    salary: "180000",
+    contractType: "CDI",
+    shift: "Matin (06h - 14h)",
+  });
+  const [hrSuccess, setHrSuccess] = useState<string | null>(null);
+  const [hrError, setHrError] = useState<string | null>(null);
+
+  // 4. Accounting Expense Form
+  const [newExpenseForm, setNewExpenseForm] = useState({
+    amount: "",
+    description: "",
+    category: "GENERAL",
+  });
+  const [expenseSuccess, setExpenseSuccess] = useState<string | null>(null);
+  const [expenseError, setExpenseError] = useState<string | null>(null);
+
+  // 5. Stock Add Form
+  const [newInventoryForm, setNewInventoryForm] = useState({
+    name: "",
+    category: "Food",
+    quantity: "20",
+    unit: "kg",
+    minThreshold: "5",
+  });
+  const [inventorySuccess, setInventorySuccess] = useState<string | null>(null);
+  const [inventoryError, setInventoryError] = useState<string | null>(null);
+
+  // 6. F&B Order Form
+  const [newOrderForm, setNewOrderForm] = useState({
+    type: "RESTAURANT",
+    tableNumber: "Table 1",
+    roomNumber: "",
+    dishId: "",
+    quantity: 1,
+  });
+  const [orderSuccess, setOrderSuccess] = useState<string | null>(null);
+  const [orderError, setOrderError] = useState<string | null>(null);
+
+  // 7. Hall Booking Form
+  const [newHallBookingForm, setNewHallBookingForm] = useState({
+    hallId: "",
+    clientName: "",
+    clientPhone: "",
+    eventDate: "",
+    durationHours: "6",
+  });
+  const [hallSuccess, setHallSuccess] = useState<string | null>(null);
+  const [hallError, setHallError] = useState<string | null>(null);
+
   // Fetch all initial data
   const fetchData = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      // Fetch from our local Next.js API endpoints
       const [
         roomsRes,
         resRes,
@@ -52,13 +114,25 @@ export default function Dashboard() {
         invRes,
         settingsRes,
         testRes,
+        hrRes,
+        ordersRes,
+        hallsRes,
+        hallBookingsRes,
+        transactionsRes,
+        dishesRes,
       ] = await Promise.all([
         fetch("/api/rooms"),
         fetch("/api/reservations"),
         fetch("/api/concierge"),
         fetch("/api/inventory"),
         fetch("/api/settings"),
-        fetch("/api/test"), // Queries seeded users & roomTypes
+        fetch("/api/test"),
+        fetch("/api/hr"),
+        fetch("/api/restaurant/orders"),
+        fetch("/api/halls"),
+        fetch("/api/halls/bookings"),
+        fetch("/api/transactions"),
+        fetch("/api/restaurant/dishes"),
       ]);
 
       const roomsJson = await roomsRes.json();
@@ -67,17 +141,28 @@ export default function Dashboard() {
       const invJson = await invRes.json();
       const settingsJson = await settingsRes.json();
       const testJson = await testRes.json();
+      const hrJson = await hrRes.json();
+      const ordersJson = await ordersRes.json();
+      const hallsJson = await hallsRes.json();
+      const hallBookingsJson = await hallBookingsRes.json();
+      const transactionsJson = await transactionsRes.json();
+      const dishesJson = await dishesRes.json();
 
       if (roomsJson.status === "success") setRooms(roomsJson.data);
       if (resJson.status === "success") setReservations(resJson.data);
       if (conciergeJson.status === "success") setConcierge(conciergeJson.data);
       if (invJson.status === "success") setInventory(invJson.data);
       if (settingsJson.status === "success") setSettings(settingsJson.data);
+      if (hrJson.status === "success") setStaff(hrJson.data.filter((s: any) => s.status !== "INACTIVE"));
+      if (ordersJson.status === "success") setOrders(ordersJson.data);
+      if (hallsJson.status === "success") setHalls(hallsJson.data);
+      if (hallBookingsJson.status === "success") setHallBookings(hallBookingsJson.data);
+      if (transactionsJson.status === "success") setTransactions(transactionsJson.data);
+      if (dishesJson.status === "success") setDishes(dishesJson.data);
 
       if (testJson.status === "success") {
         setRoomTypes(testJson.data.roomTypes || []);
         setSites(testJson.data.sites || []);
-        // Setup mock users for booking dropdown
         setUsers([
           { id: "client-id-1", name: "DIBONA ROGER TRAORE", email: "roger.traore@gmail.com" },
           { id: "client-id-2", name: "KOUAME PATRICE YAO", email: "patrice.yao@yahoo.fr" },
@@ -124,7 +209,7 @@ export default function Dashboard() {
       const data = await response.json();
       if (data.status === "success") {
         setReservations(reservations.map((res) => (res.id === resId ? data.data : res)));
-        fetchData(); // reload rooms to reflect occupied changes
+        fetchData(); 
       }
     } catch (err) {
       console.error("Failed to update reservation", err);
@@ -153,23 +238,6 @@ export default function Dashboard() {
     }
   };
 
-  // Complete Concierge request
-  const handleConciergeComplete = async (requestId: string) => {
-    try {
-      const response = await fetch(`/api/concierge/${requestId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: "COMPLETED" }),
-      });
-      const data = await response.json();
-      if (data.status === "success") {
-        setConcierge(concierge.map((c) => (c.id === requestId ? data.data : c)));
-      }
-    } catch (err) {
-      console.error("Failed to resolve concierge request", err);
-    }
-  };
-
   // Create quick booking
   const handleCreateBooking = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -184,14 +252,266 @@ export default function Dashboard() {
       });
       const data = await response.json();
       if (data.status === "success") {
-        setBookingSuccess("Réservation créée avec succès !");
+        setBookingSuccess("Réservation de chambre créée avec succès !");
         setNewBooking({ clientId: "", roomId: "", checkIn: "", checkOut: "" });
-        fetchData(); // reload rooms and reservations
+        fetchData();
       } else {
-        setBookingError(data.message || "Failed to book room.");
+        setBookingError(data.message || "Impossible de réserver la chambre.");
       }
     } catch (err) {
-      setBookingError("Server error occurred while booking.");
+      setBookingError("Erreur serveur lors de la création de la réservation.");
+    }
+  };
+
+  // RH (Ressources Humaines) Actions
+  const handleCreateStaff = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setHrError(null);
+    setHrSuccess(null);
+
+    if (!sites[0]?.id) return;
+
+    try {
+      const response = await fetch("/api/hr", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...newStaffForm, siteId: sites[0].id }),
+      });
+      const data = await response.json();
+      if (data.status === "success") {
+        setHrSuccess("Employé ajouté au registre RH !");
+        setNewStaffForm({
+          name: "",
+          email: "",
+          position: "Waiter",
+          salary: "180000",
+          contractType: "CDI",
+          shift: "Matin (06h - 14h)",
+        });
+        fetchData();
+      } else {
+        setHrError(data.message || "Erreur de création du profil RH.");
+      }
+    } catch (err) {
+      setHrError("Erreur serveur lors de l'embauche.");
+    }
+  };
+
+  const handleStaffShiftChange = async (staffId: string, shift: string) => {
+    try {
+      await fetch(`/api/hr/${staffId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ shift }),
+      });
+      fetchData();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleStaffStatusChange = async (staffId: string, status: string) => {
+    try {
+      await fetch(`/api/hr/${staffId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+      fetchData();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleStaffSalaryChange = async (staffId: string, salary: string) => {
+    try {
+      await fetch(`/api/hr/${staffId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ salary }),
+      });
+      fetchData();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleStaffDelete = async (staffId: string) => {
+    try {
+      await fetch(`/api/hr/${staffId}`, {
+        method: "DELETE",
+      });
+      fetchData();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  // Accounting Actions
+  const handleCreateExpense = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setExpenseError(null);
+    setExpenseSuccess(null);
+
+    try {
+      const numericAmount = -Math.abs(parseFloat(newExpenseForm.amount));
+      const response = await fetch("/api/transactions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          amount: numericAmount,
+          type: "EXPENSE",
+          status: "PAID",
+          description: newExpenseForm.description,
+          category: newExpenseForm.category,
+        }),
+      });
+      const data = await response.json();
+      if (data.status === "success") {
+        setExpenseSuccess("Dépense enregistrée dans le livre comptable !");
+        setNewExpenseForm({ amount: "", description: "", category: "GENERAL" });
+        fetchData();
+      } else {
+        setExpenseError(data.message || "Erreur lors du log de transaction.");
+      }
+    } catch (err) {
+      setExpenseError("Erreur serveur lors de la transaction.");
+    }
+  };
+
+  // Stock inventory Actions
+  const handleInventoryStockChange = async (itemId: string, newQuantity: number) => {
+    try {
+      await fetch(`/api/inventory/${itemId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ quantity: newQuantity }),
+      });
+      fetchData();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleCreateInventoryItem = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setInventoryError(null);
+    setInventorySuccess(null);
+    if (!sites[0]?.id) return;
+
+    try {
+      const response = await fetch("/api/inventory", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...newInventoryForm,
+          quantity: parseFloat(newInventoryForm.quantity),
+          minThreshold: parseFloat(newInventoryForm.minThreshold),
+          siteId: sites[0].id,
+        }),
+      });
+      const data = await response.json();
+      if (data.status === "success") {
+        setInventorySuccess("Article de stock ajouté avec succès !");
+        setNewInventoryForm({ name: "", category: "Food", quantity: "20", unit: "kg", minThreshold: "5" });
+        fetchData();
+      } else {
+        setInventoryError(data.message || "Impossible de créer le stock.");
+      }
+    } catch (err) {
+      setInventoryError("Erreur serveur lors du stock.");
+    }
+  };
+
+  // F&B orders Actions
+  const handleCreateOrder = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setOrderError(null);
+    setOrderSuccess(null);
+
+    if (!newOrderForm.dishId) {
+      setOrderError("Sélectionnez au moins un article culinaire ou boisson.");
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/restaurant/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: newOrderForm.type,
+          tableNumber: newOrderForm.type !== "ROOM_SERVICE" ? newOrderForm.tableNumber : null,
+          roomNumber: newOrderForm.type === "ROOM_SERVICE" ? newOrderForm.roomNumber : null,
+          items: [{ dishId: newOrderForm.dishId, quantity: parseInt(newOrderForm.quantity as any) }],
+        }),
+      });
+      const data = await response.json();
+      if (data.status === "success") {
+        setOrderSuccess("Commande de service enregistrée !");
+        setNewOrderForm({ ...newOrderForm, dishId: "", quantity: 1 });
+        fetchData();
+      } else {
+        setOrderError(data.message || "Erreur de création de commande.");
+      }
+    } catch (err) {
+      setOrderError("Erreur serveur F&B.");
+    }
+  };
+
+  const handleOrderUpdateStatus = async (orderId: string, status: string) => {
+    try {
+      await fetch(`/api/restaurant/orders/${orderId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+      fetchData();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  // Salles de Réception Actions
+  const handleCreateHallBooking = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setHallError(null);
+    setHallSuccess(null);
+
+    try {
+      const response = await fetch("/api/halls/bookings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newHallBookingForm),
+      });
+      const data = await response.json();
+      if (data.status === "success") {
+        setHallSuccess("Réservation de salle enregistrée !");
+        setNewHallBookingForm({
+          hallId: "",
+          clientName: "",
+          clientPhone: "",
+          eventDate: "",
+          durationHours: "6",
+        });
+        fetchData();
+      } else {
+        setHallError(data.message || "Erreur de réservation.");
+      }
+    } catch (err) {
+      setHallError("Erreur serveur lors de la planification.");
+    }
+  };
+
+  const handleHallBookingUpdateStatus = async (bookingId: string, status: string) => {
+    try {
+      await fetch(`/api/halls/bookings/${bookingId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+      fetchData();
+    } catch (err) {
+      console.error(err);
     }
   };
 
@@ -201,6 +521,11 @@ export default function Dashboard() {
   const cleaningCount = rooms.filter((r) => r.status === "CLEANING").length;
   const maintenanceCount = rooms.filter((r) => r.status === "MAINTENANCE").length;
   const lowStockCount = inventory.filter((item) => item.quantity <= item.minThreshold).length;
+
+  // accounting ledger balance stats
+  const totalIncomes = transactions.filter(t => t.amount > 0 && t.status === "PAID").reduce((sum, t) => sum + t.amount, 0);
+  const totalExpenses = transactions.filter(t => t.amount < 0 && t.status === "PAID").reduce((sum, t) => sum + t.amount, 0);
+  const netTreasury = totalIncomes + totalExpenses;
 
   return (
     <div className="flex flex-col min-h-screen bg-slate-50 text-slate-800 font-sans">
@@ -245,7 +570,7 @@ export default function Dashboard() {
       {loading ? (
         <div className="flex-1 flex flex-col items-center justify-center gap-3">
           <div className="w-8 h-8 rounded-full border-4 border-[#0d5ca3] border-t-transparent animate-spin" />
-          <span className="text-sm text-slate-400">Synchronisation en cours...</span>
+          <span className="text-sm text-slate-450">Synchronisation en cours...</span>
         </div>
       ) : (
         <div className="flex-1 flex flex-col lg:flex-row">
@@ -268,27 +593,27 @@ export default function Dashboard() {
                 </button>
 
                 <button 
-                  onClick={() => setActiveTab("reservations")}
+                  onClick={() => setActiveTab("hr")}
                   className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-left transition-all ${
-                    activeTab === "reservations" 
+                    activeTab === "hr" 
                       ? "bg-[#0d5ca3] text-white shadow-md shadow-blue-500/10" 
                       : "text-slate-650 hover:bg-slate-200/50 hover:text-slate-900"
                   }`}
                 >
-                  <span className="text-base">📅</span>
-                  Réservations ({reservations.length})
+                  <span className="text-base">👔</span>
+                  RH (Employés : {staff.length})
                 </button>
 
                 <button 
-                  onClick={() => setActiveTab("concierge")}
+                  onClick={() => setActiveTab("accounting")}
                   className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-left transition-all ${
-                    activeTab === "concierge" 
+                    activeTab === "accounting" 
                       ? "bg-[#0d5ca3] text-white shadow-md shadow-blue-500/10" 
                       : "text-slate-655 hover:bg-slate-200/50 hover:text-slate-900"
                   }`}
                 >
-                  <span className="text-base">🛎️</span>
-                  Requêtes ({concierge.filter(c => c.status === "PENDING").length})
+                  <span className="text-base">📈</span>
+                  Comptabilité (Livre)
                 </button>
 
                 <button 
@@ -307,6 +632,30 @@ export default function Dashboard() {
                     </span>
                   )}
                 </button>
+
+                <button 
+                  onClick={() => setActiveTab("restaurant")}
+                  className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-left transition-all ${
+                    activeTab === "restaurant" 
+                      ? "bg-[#0d5ca3] text-white shadow-md shadow-blue-500/10" 
+                      : "text-slate-655 hover:bg-slate-200/50 hover:text-slate-900"
+                  }`}
+                >
+                  <span className="text-base">🍽️</span>
+                  Restaurant & Bar ({orders.filter(o => o.status !== 'PAID' && o.status !== 'CANCELLED').length})
+                </button>
+
+                <button 
+                  onClick={() => setActiveTab("halls")}
+                  className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-left transition-all ${
+                    activeTab === "halls" 
+                      ? "bg-[#0d5ca3] text-white shadow-md shadow-blue-500/10" 
+                      : "text-slate-655 hover:bg-slate-200/50 hover:text-slate-900"
+                  }`}
+                >
+                  <span className="text-base">🎪</span>
+                  Réceptions / Salles
+                </button>
               </nav>
             </div>
 
@@ -314,7 +663,7 @@ export default function Dashboard() {
               <div className="p-3.5 rounded-lg bg-white border border-slate-200 text-xs shadow-sm">
                 <span className="block font-bold text-slate-500 mb-1">Établissement</span>
                 <span className="block text-[#0d5ca3] font-bold">{sites[0]?.name || "Astoria Palace"}</span>
-                <span className="block text-slate-500 mt-1">{sites[0]?.location || "Yopougon, Abidjan"}</span>
+                <span className="block text-slate-550 mt-1">{sites[0]?.location || "Yopougon, Abidjan"}</span>
               </div>
             </div>
           </aside>
@@ -335,18 +684,19 @@ export default function Dashboard() {
               </div>
 
               <div className="p-4 rounded-xl bg-white border border-slate-200/80 hover:border-[#0d5ca3]/30 transition-all flex flex-col justify-between shadow-sm">
-                <span className="text-slate-500 text-xs font-bold uppercase tracking-wider">Ménage requis</span>
+                <span className="text-slate-500 text-xs font-bold uppercase tracking-wider">Trésorerie nette</span>
                 <div className="flex items-baseline gap-2 mt-2">
-                  <span className="text-2xl font-bold font-serif text-[#b08b45]">{cleaningCount}</span>
-                  <span className="text-[10px] text-slate-550">chambres sales</span>
+                  <span className={`text-2xl font-bold font-serif ${netTreasury >= 0 ? 'text-[#b08b45]' : 'text-rose-600'}`}>
+                    {netTreasury.toLocaleString("fr-FR")} F
+                  </span>
                 </div>
               </div>
 
               <div className="p-4 rounded-xl bg-white border border-slate-200/80 hover:border-[#0d5ca3]/30 transition-all flex flex-col justify-between shadow-sm">
-                <span className="text-slate-500 text-xs font-bold uppercase tracking-wider">Hors service (SAV)</span>
+                <span className="text-slate-500 text-xs font-bold uppercase tracking-wider">Effectifs RH actifs</span>
                 <div className="flex items-baseline gap-2 mt-2">
-                  <span className="text-2xl font-bold font-serif text-rose-600">{maintenanceCount}</span>
-                  <span className="text-[10px] text-slate-550">en réparation</span>
+                  <span className="text-2xl font-bold font-serif text-indigo-600">{staff.filter(s => s.status === 'ACTIVE').length}</span>
+                  <span className="text-[10px] text-slate-550">salariés postés</span>
                 </div>
               </div>
 
@@ -430,263 +780,419 @@ export default function Dashboard() {
                     );
                   })}
                 </div>
+
+                {/* Bookings & Register split */}
+                <div className="grid lg:grid-cols-3 gap-8">
+                  {/* Bookings List */}
+                  <div className="lg:col-span-2 flex flex-col gap-4">
+                    <h3 className="text-base font-bold text-slate-900 font-serif">Arrivées & KYC Résidents</h3>
+                    <div className="flex flex-col gap-3">
+                      {reservations.length === 0 ? (
+                        <div className="p-6 text-center bg-white border border-slate-200 rounded-xl text-slate-450 text-xs">
+                          Aucun séjour enregistré.
+                        </div>
+                      ) : (
+                        reservations.map((res) => {
+                          const checkInDate = new Date(res.checkIn).toLocaleDateString("fr-FR");
+                          const checkOutDate = new Date(res.checkOut).toLocaleDateString("fr-FR");
+                          const isKycSubmitted = res.checkInStatus === "KYC_SUBMITTED" || res.kycData;
+
+                          return (
+                            <div key={res.id} className="p-4 rounded-xl bg-white border border-slate-200 shadow-sm flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+                              <div>
+                                <div className="flex items-center gap-2 mb-1">
+                                  <span className="px-2 py-0.5 rounded text-[9px] font-extrabold bg-slate-100 border border-slate-200 text-slate-700">Ch. {res.room?.number}</span>
+                                  <span className="text-xs text-[#0d5ca3] font-bold">{res.room?.roomType?.name}</span>
+                                </div>
+                                <h4 className="text-sm font-bold text-slate-900 uppercase font-serif">{res.client?.name}</h4>
+                                <div className="text-[11px] text-slate-500 mt-1">
+                                  <span>📅 {checkInDate} au {checkOutDate}</span> | <span>💰 {res.totalPrice.toLocaleString("fr-FR")} F</span>
+                                </div>
+                                <div className="mt-2 flex items-center gap-2">
+                                  <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded border ${
+                                    isKycSubmitted ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-rose-50 border-rose-250 text-rose-700'
+                                  }`}>{isKycSubmitted ? "CNI Enregistrée" : "CNI Manquante"}</span>
+                                </div>
+                              </div>
+
+                              <div className="flex flex-col sm:items-end gap-1.5 shrink-0">
+                                <span className="text-[9px] font-extrabold uppercase text-slate-500">Statut : <span className="text-[#b08b45]">{res.status}</span></span>
+                                <div className="flex gap-2">
+                                  {!isKycSubmitted && (
+                                    <button 
+                                      onClick={() => setKycResId(res.id)}
+                                      className="px-2.5 py-1 rounded text-[10px] font-bold bg-[#c5a059]/10 hover:bg-[#c5a059]/20 text-[#b08b45] border border-[#c5a059]/40"
+                                    >
+                                      Enregistrer ID
+                                    </button>
+                                  )}
+                                  {res.status === "PENDING" && (
+                                    <button 
+                                      onClick={() => handleReservationStatusChange(res.id, "CONFIRMED")}
+                                      className="px-2.5 py-1 rounded text-[10px] font-bold bg-[#0d5ca3] text-white hover:bg-[#0d5ca3]/90"
+                                    >
+                                      Check-in
+                                    </button>
+                                  )}
+                                  {res.status === "CONFIRMED" && (
+                                    <button 
+                                      onClick={() => handleReservationStatusChange(res.id, "COMPLETED")}
+                                      className="px-2.5 py-1 rounded text-[10px] font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200"
+                                    >
+                                      Check-out
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Booking form */}
+                  <div>
+                    <h3 className="text-base font-bold text-slate-900 font-serif mb-4">Nouvelle Réservation</h3>
+                    <form onSubmit={handleCreateBooking} className="p-4 rounded-xl bg-white border border-slate-200 shadow-sm flex flex-col gap-3.5 text-xs font-semibold">
+                      {bookingError && <div className="p-2 rounded bg-rose-50 border border-rose-200 text-rose-700">{bookingError}</div>}
+                      {bookingSuccess && <div className="p-2 rounded bg-emerald-50 border border-emerald-200 text-emerald-700">{bookingSuccess}</div>}
+
+                      <div className="flex flex-col gap-1">
+                        <label className="text-slate-600">Client</label>
+                        <select 
+                          required
+                          value={newBooking.clientId}
+                          onChange={(e) => setNewBooking({ ...newBooking, clientId: e.target.value })}
+                          className="p-2 bg-slate-50 border border-slate-200 rounded text-slate-800"
+                        >
+                          <option value="">Sélectionner un client...</option>
+                          {users.map((u) => (
+                            <option key={u.id} value={u.id}>{u.name}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div className="flex flex-col gap-1">
+                        <label className="text-slate-600">Chambre Libre</label>
+                        <select 
+                          required
+                          value={newBooking.roomId}
+                          onChange={(e) => setNewBooking({ ...newBooking, roomId: e.target.value })}
+                          className="p-2 bg-slate-50 border border-slate-200 rounded text-slate-800"
+                        >
+                          <option value="">Sélectionner...</option>
+                          {rooms.filter(r => r.status === "AVAILABLE").map((r) => (
+                            <option key={r.id} value={r.id}>N° {r.number} — {r.roomType?.name} ({r.roomType?.price} F)</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="flex flex-col gap-1">
+                          <label className="text-slate-600">Arrivée</label>
+                          <input 
+                            type="date"
+                            required
+                            value={newBooking.checkIn}
+                            onChange={(e) => setNewBooking({ ...newBooking, checkIn: e.target.value })}
+                            className="p-2 bg-slate-50 border border-slate-200 rounded text-slate-800"
+                          />
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          <label className="text-slate-600">Départ</label>
+                          <input 
+                            type="date"
+                            required
+                            value={newBooking.checkOut}
+                            onChange={(e) => setNewBooking({ ...newBooking, checkOut: e.target.value })}
+                            className="p-2 bg-slate-50 border border-slate-200 rounded text-slate-800"
+                          />
+                        </div>
+                      </div>
+
+                      <button type="submit" className="py-2.5 rounded bg-gradient-to-r from-[#c5a059] to-[#b08b45] text-slate-950 font-bold uppercase transition-all shadow-sm">
+                        Enregistrer séjour
+                      </button>
+                    </form>
+                  </div>
+                </div>
               </div>
             )}
 
-            {/* TAB CONTENT: RESERVATIONS */}
-            {activeTab === "reservations" && (
-              <div className="grid lg:grid-cols-3 gap-8 animate-fadeIn">
-                
-                {/* Bookings List */}
-                <div className="lg:col-span-2 flex flex-col gap-6">
+            {/* TAB CONTENT: HR */}
+            {activeTab === "hr" && (
+              <div className="flex flex-col gap-6 animate-fadeIn">
+                <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
                   <div>
-                    <h2 className="text-xl font-bold font-serif text-slate-900">Registre des Réservations</h2>
-                    <p className="text-xs text-slate-500">Gérez le KYC réglementaire et mettez à jour le statut des check-ins.</p>
+                    <h2 className="text-xl font-bold font-serif text-slate-900">Registre du Personnel (RH)</h2>
+                    <p className="text-xs text-slate-550">Gestion des fiches de paye, types de contrat et horaires de shift des employés.</p>
                   </div>
+                </div>
 
-                  <div className="flex flex-col gap-4">
-                    {reservations.length === 0 ? (
-                      <div className="p-8 text-center rounded-xl bg-white border border-slate-200 text-slate-500 text-sm shadow-sm">
-                        Aucune réservation enregistrée dans le système.
-                      </div>
-                    ) : (
-                      reservations.map((res) => {
-                        const checkInDate = new Date(res.checkIn).toLocaleDateString("fr-FR");
-                        const checkOutDate = new Date(res.checkOut).toLocaleDateString("fr-FR");
-                        const isKycSubmitted = res.checkInStatus === "KYC_SUBMITTED" || res.kycData;
-
-                        return (
-                          <div 
-                            key={res.id} 
-                            className="p-5 rounded-xl bg-white border border-slate-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-6 shadow-sm hover:border-[#0d5ca3]/20 transition-all"
-                          >
-                            <div className="flex-1 flex flex-col gap-2">
-                              <div className="flex flex-wrap items-center gap-2">
-                                <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200/60">
-                                  Chambre {res.room?.number}
-                                </span>
-                                <span className="text-xs text-[#0d5ca3] font-bold">{res.room?.roomType?.name}</span>
+                <div className="grid lg:grid-cols-3 gap-8">
+                  {/* Employees Directory */}
+                  <div className="lg:col-span-2 flex flex-col gap-4">
+                    <h3 className="text-base font-bold text-slate-900 font-serif">Fiches Salariés</h3>
+                    <div className="flex flex-col gap-3">
+                      {staff.length === 0 ? (
+                        <div className="p-6 text-center bg-white border border-slate-200 rounded-xl text-slate-400 text-xs">
+                          Aucun employé enregistré dans le registre RH.
+                        </div>
+                      ) : (
+                        staff.map((employee) => (
+                          <div key={employee.id} className="p-4 bg-white border border-slate-200 rounded-xl shadow-sm flex flex-col sm:flex-row justify-between sm:items-center gap-4 text-xs font-semibold">
+                            <div>
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="px-2 py-0.5 rounded text-[9px] font-extrabold bg-[#0d5ca3]/15 text-[#0d5ca3]">{employee.position}</span>
+                                <span className="px-2 py-0.5 rounded text-[9px] font-extrabold bg-slate-100 text-slate-600 border border-slate-200">{employee.contractType}</span>
                               </div>
-                              
-                              <h3 className="text-base font-bold text-slate-900 uppercase font-serif">
-                                {res.client?.name}
-                              </h3>
-
-                              <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-655 font-medium">
-                                <span>📅 {checkInDate} au {checkOutDate}</span>
-                                <span>💰 {res.totalPrice.toLocaleString("fr-FR")} FCFA</span>
-                              </div>
-
-                              {/* KYC Label status */}
-                              <div className="mt-1 flex items-center gap-2">
-                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${
-                                  isKycSubmitted 
-                                    ? 'bg-emerald-50 border-emerald-200 text-emerald-700' 
-                                    : 'bg-rose-50 border-rose-200 text-rose-700'
-                                }`}>
-                                  {isKycSubmitted ? "KYC Complété" : "KYC Requis (ARTCI)"}
-                                </span>
-                                {res.kycData && (
-                                  <span className="text-[10px] text-slate-500">
-                                    ({res.kycData.idType} : {res.kycData.idNumber})
-                                  </span>
-                                )}
+                              <h4 className="text-sm font-bold text-slate-900 font-serif">{employee.user?.name}</h4>
+                              <p className="text-[10px] text-slate-400 mt-0.5">{employee.user?.email}</p>
+                              <div className="mt-2.5 flex flex-wrap items-center gap-4">
+                                <div className="flex flex-col">
+                                  <span className="text-[9px] uppercase font-bold text-slate-400">Salaire</span>
+                                  <input 
+                                    type="number"
+                                    defaultValue={employee.salary}
+                                    onBlur={(e) => handleStaffSalaryChange(employee.id, e.target.value)}
+                                    className="w-24 text-[11px] font-bold border border-slate-200 rounded p-0.5 bg-slate-50 focus:bg-white text-slate-800"
+                                  />
+                                </div>
+                                <div className="flex flex-col">
+                                  <span className="text-[9px] uppercase font-bold text-slate-400">Shift Horaire</span>
+                                  <select 
+                                    value={employee.shift}
+                                    onChange={(e) => handleStaffShiftChange(employee.id, e.target.value)}
+                                    className="text-[11px] font-bold border border-slate-200 rounded p-0.5 bg-slate-50 text-slate-800"
+                                  >
+                                    <option value="Matin (06h - 14h)">Matin (06h - 14h)</option>
+                                    <option value="Après-midi (14h - 22h)">Après-midi (14h - 22h)</option>
+                                    <option value="Nuit (22h - 06h)">Nuit (22h - 06h)</option>
+                                    <option value="Administratif (08h - 17h)">Administratif (08h - 17h)</option>
+                                  </select>
+                                </div>
                               </div>
                             </div>
 
-                            {/* Actions block */}
                             <div className="flex flex-col sm:items-end gap-2 shrink-0">
-                              <span className="text-[10px] uppercase font-bold text-slate-550 tracking-wider">
-                                Statut Séjour : <span className="text-[#b08b45] font-black">{res.status}</span>
-                              </span>
-
-                              <div className="flex flex-wrap items-center gap-2">
-                                {/* KYC Submit trigger */}
-                                {!isKycSubmitted && (
-                                  <button 
-                                    onClick={() => setKycResId(res.id)}
-                                    className="px-3 py-1.5 rounded text-xs font-bold bg-[#c5a059]/10 hover:bg-[#c5a059]/20 text-[#b08b45] border border-[#c5a059]/40 transition-colors animate-pulse"
-                                  >
-                                    Enregistrer ID (CNI)
-                                  </button>
-                                )}
-
-                                {/* Check-in trigger */}
-                                {res.status === "PENDING" && (
-                                  <button 
-                                    onClick={() => handleReservationStatusChange(res.id, "CONFIRMED")}
-                                    className="px-3 py-1.5 rounded text-xs font-bold bg-gradient-to-r from-[#0d5ca3] to-[#1e40af] hover:from-[#1e40af] hover:to-[#0d5ca3] text-white transition-colors"
-                                  >
-                                    Confirmer Arrivée
-                                  </button>
-                                )}
-
-                                {/* Check-out trigger */}
-                                {res.status === "CONFIRMED" && (
-                                  <button 
-                                    onClick={() => handleReservationStatusChange(res.id, "COMPLETED")}
-                                    className="px-3 py-1.5 rounded text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-250 transition-colors"
-                                  >
-                                    Check-out / Facturer
-                                  </button>
-                                )}
+                              <div className="flex flex-col">
+                                <span className="text-[9px] uppercase font-bold text-slate-400 mb-1">Présence</span>
+                                <select 
+                                  value={employee.status}
+                                  onChange={(e) => handleStaffStatusChange(employee.id, e.target.value)}
+                                  className={`text-[10px] font-bold border border-slate-200 rounded p-1 ${
+                                    employee.status === "ACTIVE" 
+                                      ? "bg-emerald-50 text-emerald-700" 
+                                      : "bg-rose-50 text-rose-700"
+                                  }`}
+                                >
+                                  <option value="ACTIVE">Actif / Poste</option>
+                                  <option value="CONGE">Congés</option>
+                                  <option value="ABSENT">Absent</option>
+                                </select>
                               </div>
+                              <button 
+                                onClick={() => handleStaffDelete(employee.id)}
+                                className="text-[9px] font-extrabold text-rose-500 hover:underline mt-1 self-start sm:self-end"
+                              >
+                                Licencier / Désactiver
+                              </button>
                             </div>
-
                           </div>
-                        );
-                      })
-                    )}
+                        ))
+                      )}
+                    </div>
                   </div>
-                </div>
 
-                {/* Create Quick Booking Widget */}
-                <div className="flex flex-col gap-6">
+                  {/* Add Employee Form */}
                   <div>
-                    <h2 className="text-xl font-bold font-serif text-slate-900">Nouvelle Réservation</h2>
-                    <p className="text-xs text-slate-550">Enregistrez un séjour avec calcul tarifaire automatique et vérification de collision des dates.</p>
+                    <h3 className="text-base font-bold text-slate-900 font-serif mb-4">Nouvel Employé</h3>
+                    <form onSubmit={handleCreateStaff} className="p-4 rounded-xl bg-white border border-slate-200 shadow-sm flex flex-col gap-3.5 text-xs font-semibold">
+                      {hrError && <div className="p-2 rounded bg-rose-50 border border-rose-200 text-rose-700">{hrError}</div>}
+                      {hrSuccess && <div className="p-2 rounded bg-emerald-50 border border-emerald-200 text-emerald-700">{hrSuccess}</div>}
+
+                      <div className="flex flex-col gap-1">
+                        <label className="text-slate-655">Nom complet</label>
+                        <input 
+                          type="text"
+                          required
+                          placeholder="Ex: Patrice Yao"
+                          value={newStaffForm.name}
+                          onChange={(e) => setNewStaffForm({ ...newStaffForm, name: e.target.value })}
+                          className="p-2 bg-slate-50 border border-slate-200 rounded text-slate-800"
+                        />
+                      </div>
+
+                      <div className="flex flex-col gap-1">
+                        <label className="text-slate-655">Email</label>
+                        <input 
+                          type="email"
+                          required
+                          placeholder="Ex: patrice.yao@astoria.ci"
+                          value={newStaffForm.email}
+                          onChange={(e) => setNewStaffForm({ ...newStaffForm, email: e.target.value })}
+                          className="p-2 bg-slate-50 border border-slate-200 rounded text-slate-800"
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="flex flex-col gap-1">
+                          <label className="text-slate-655">Poste</label>
+                          <select 
+                            value={newStaffForm.position}
+                            onChange={(e) => setNewStaffForm({ ...newStaffForm, position: e.target.value })}
+                            className="p-2 bg-slate-50 border border-slate-200 rounded text-slate-800"
+                          >
+                            <option value="Receptionist">Réceptionniste</option>
+                            <option value="Housekeeping">Gouvernante</option>
+                            <option value="Chef">Chef Cuisine</option>
+                            <option value="Waiter">Serveur</option>
+                            <option value="Bartender">Barman</option>
+                            <option value="Manager">Comptable / Cadre</option>
+                          </select>
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          <label className="text-slate-655">Contrat</label>
+                          <select 
+                            value={newStaffForm.contractType}
+                            onChange={(e) => setNewStaffForm({ ...newStaffForm, contractType: e.target.value })}
+                            className="p-2 bg-slate-50 border border-slate-200 rounded text-slate-800"
+                          >
+                            <option value="CDI">CDI</option>
+                            <option value="CDD">CDD</option>
+                            <option value="Stage">Stage</option>
+                            <option value="Extra">Extra</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col gap-1">
+                        <label className="text-slate-655">Salaire Mensuel (FCFA)</label>
+                        <input 
+                          type="number"
+                          required
+                          value={newStaffForm.salary}
+                          onChange={(e) => setNewStaffForm({ ...newStaffForm, salary: e.target.value })}
+                          className="p-2 bg-slate-50 border border-slate-200 rounded text-slate-800"
+                        />
+                      </div>
+
+                      <button type="submit" className="py-2.5 rounded bg-gradient-to-r from-[#0d5ca3] to-[#1e40af] text-white font-bold uppercase transition-all shadow-sm">
+                        Embaucher Salarié
+                      </button>
+                    </form>
                   </div>
-
-                  <form onSubmit={handleCreateBooking} className="p-5 rounded-xl bg-white border border-slate-200/80 flex flex-col gap-4 text-xs font-medium shadow-sm">
-                    {bookingError && (
-                      <div className="p-3 rounded bg-rose-50 border border-rose-200 text-rose-700">
-                        {bookingError}
-                      </div>
-                    )}
-                    {bookingSuccess && (
-                      <div className="p-3 rounded bg-emerald-50 border border-emerald-200 text-emerald-700">
-                        {bookingSuccess}
-                      </div>
-                    )}
-
-                    <div className="flex flex-col gap-1.5">
-                      <label className="text-slate-655 font-bold">Client</label>
-                      <select 
-                        required
-                        value={newBooking.clientId}
-                        onChange={(e) => setNewBooking({ ...newBooking, clientId: e.target.value })}
-                        className="p-2.5 bg-slate-50 border border-slate-200 rounded text-slate-800 focus:outline-none focus:border-[#c5a059] focus:bg-white"
-                      >
-                        <option value="">Sélectionner un client...</option>
-                        {users.map((u) => (
-                          <option key={u.id} value={u.id}>{u.name} ({u.email})</option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div className="flex flex-col gap-1.5">
-                      <label className="text-slate-655 font-bold">Chambre</label>
-                      <select 
-                        required
-                        value={newBooking.roomId}
-                        onChange={(e) => setNewBooking({ ...newBooking, roomId: e.target.value })}
-                        className="p-2.5 bg-slate-50 border border-slate-200 rounded text-slate-800 focus:outline-none focus:border-[#c5a059] focus:bg-white"
-                      >
-                        <option value="">Sélectionner une chambre libre...</option>
-                        {rooms.filter(r => r.status === "AVAILABLE").map((r) => (
-                          <option key={r.id} value={r.id}>
-                            N° {r.number} — {r.roomType?.name} ({r.roomType?.price.toLocaleString("fr-FR")} F/nuit)
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="flex flex-col gap-1.5">
-                        <label className="text-slate-655 font-bold">Check-in</label>
-                        <input 
-                          type="date"
-                          required
-                          value={newBooking.checkIn}
-                          onChange={(e) => setNewBooking({ ...newBooking, checkIn: e.target.value })}
-                          className="p-2.5 bg-slate-50 border border-slate-200 rounded text-slate-800 focus:outline-none focus:border-[#c5a059] focus:bg-white"
-                        />
-                      </div>
-
-                      <div className="flex flex-col gap-1.5">
-                        <label className="text-slate-655 font-bold">Check-out</label>
-                        <input 
-                          type="date"
-                          required
-                          value={newBooking.checkOut}
-                          onChange={(e) => setNewBooking({ ...newBooking, checkOut: e.target.value })}
-                          className="p-2.5 bg-slate-50 border border-slate-200 rounded text-slate-800 focus:outline-none focus:border-[#c5a059] focus:bg-white"
-                        />
-                      </div>
-                    </div>
-
-                    <button 
-                      type="submit"
-                      className="mt-2 py-3 rounded bg-[#c5a059] hover:bg-[#b08b45] text-slate-950 font-bold tracking-wider uppercase transition-colors"
-                    >
-                      Enregistrer le Séjour
-                    </button>
-                  </form>
                 </div>
-
               </div>
             )}
 
-            {/* TAB CONTENT: CONCIERGE & SERVICES */}
-            {activeTab === "concierge" && (
+            {/* TAB CONTENT: ACCOUNTING */}
+            {activeTab === "accounting" && (
               <div className="flex flex-col gap-6 animate-fadeIn">
                 <div>
-                  <h2 className="text-xl font-bold font-serif text-slate-900">Requêtes & Services Chambres</h2>
-                  <p className="text-xs text-slate-500">Pilotez les demandes des résidents (room service, serviettes, maintenance technique) et validez leur exécution.</p>
+                  <h2 className="text-xl font-bold font-serif text-slate-900">Livre Comptable & Trésorerie</h2>
+                  <p className="text-xs text-slate-550">Suivi des encaissements d'exploitation et des dépenses de fonctionnement.</p>
                 </div>
 
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {concierge.length === 0 ? (
-                    <div className="md:col-span-2 lg:col-span-3 p-8 text-center rounded-xl bg-white border border-slate-200 text-slate-500 text-sm shadow-sm">
-                      Aucune requête de service active en cours.
+                <div className="grid lg:grid-cols-3 gap-8">
+                  {/* Accounting Ledger Table */}
+                  <div className="lg:col-span-2 flex flex-col gap-4">
+                    <h3 className="text-base font-bold text-slate-900 font-serif">Grand Livre des Écritures</h3>
+                    
+                    <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
+                      <table className="w-full text-left text-xs">
+                        <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider">
+                          <tr>
+                            <th className="px-5 py-3">Date</th>
+                            <th className="px-5 py-3">Description</th>
+                            <th className="px-5 py-3 text-center">Catégorie</th>
+                            <th className="px-5 py-3 text-right">Montant</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-200 font-semibold">
+                          {transactions.length === 0 ? (
+                            <tr>
+                              <td colSpan={4} className="px-5 py-6 text-center text-slate-400">Aucun mouvement comptable.</td>
+                            </tr>
+                          ) : (
+                            transactions.map((t) => {
+                              const amountFormatted = t.amount.toLocaleString("fr-FR");
+                              const dateFormatted = new Date(t.createdAt).toLocaleDateString("fr-FR");
+                              const isPositive = t.amount > 0;
+
+                              return (
+                                <tr key={t.id} className="hover:bg-slate-50/50">
+                                  <td className="px-5 py-3 text-slate-500">{dateFormatted}</td>
+                                  <td className="px-5 py-3 text-slate-900">{t.description}</td>
+                                  <td className="px-5 py-3 text-center">
+                                    <span className="px-2 py-0.5 rounded text-[9px] font-bold bg-slate-100 border border-slate-200 text-slate-700">
+                                      {t.category}
+                                    </span>
+                                  </td>
+                                  <td className={`px-5 py-3 text-right font-serif font-extrabold ${isPositive ? 'text-emerald-600' : 'text-rose-600'}`}>
+                                    {isPositive ? `+ ${amountFormatted}` : `${amountFormatted}`} F
+                                  </td>
+                                </tr>
+                              );
+                            })
+                          )}
+                        </tbody>
+                      </table>
                     </div>
-                  ) : (
-                    concierge.map((req) => {
-                      const isPending = req.status === "PENDING";
-                      const dateAdded = new Date(req.createdAt).toLocaleTimeString("fr-FR", { hour: '2-digit', minute: '2-digit' });
+                  </div>
 
-                      return (
-                        <div 
-                          key={req.id} 
-                          className="p-5 rounded-xl bg-white border border-slate-200/80 flex flex-col justify-between gap-4 shadow-sm hover:border-[#0d5ca3]/20 transition-colors"
-                        >
-                          <div>
-                            <div className="flex items-center justify-between mb-3">
-                              <span className="px-2.5 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200/80">
-                                Ch. {req.roomNumber}
-                              </span>
-                              <span className="text-[10px] text-slate-500 font-semibold">À {dateAdded}</span>
-                            </div>
+                  {/* Saisie de Dépenses Form */}
+                  <div>
+                    <h3 className="text-base font-bold text-slate-900 font-serif mb-4">Saisie de Dépense Fausse/Réelle</h3>
+                    <form onSubmit={handleCreateExpense} className="p-4 rounded-xl bg-white border border-slate-200 shadow-sm flex flex-col gap-3.5 text-xs font-semibold">
+                      {expenseError && <div className="p-2 rounded bg-rose-50 border border-rose-200 text-rose-700">{expenseError}</div>}
+                      {expenseSuccess && <div className="p-2 rounded bg-emerald-50 border border-emerald-200 text-emerald-700">{expenseSuccess}</div>}
 
-                            <span className="block text-sm font-bold text-[#0d5ca3] mb-1.5 uppercase font-serif tracking-wide">
-                              🛎️ {req.type.replace('_', ' ')}
-                            </span>
-                            
-                            <p className="text-xs text-slate-600 leading-relaxed">
-                              {req.description}
-                            </p>
-                          </div>
+                      <div className="flex flex-col gap-1">
+                        <label className="text-slate-655">Description de la dépense</label>
+                        <input 
+                          type="text"
+                          required
+                          placeholder="Ex: Facture d'eau SODECI Yopougon"
+                          value={newExpenseForm.description}
+                          onChange={(e) => setNewExpenseForm({ ...newExpenseForm, description: e.target.value })}
+                          className="p-2 bg-slate-50 border border-slate-200 rounded text-slate-800"
+                        />
+                      </div>
 
-                          <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
-                            <span className={`text-[10px] font-bold uppercase tracking-wider ${
-                              isPending ? 'text-[#b08b45] animate-pulse font-black' : 'text-emerald-600 font-bold'
-                            }`}>
-                              {isPending ? "En Attente" : "Exécuté"}
-                            </span>
-
-                            {isPending && (
-                              <button 
-                                onClick={() => handleConciergeComplete(req.id)}
-                                className="px-2.5 py-1 rounded text-[10px] font-bold bg-[#0d5ca3] hover:bg-[#0d5ca3]/90 text-white transition-colors shadow-sm"
-                              >
-                                Résoudre
-                              </button>
-                            )}
-                          </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="flex flex-col gap-1">
+                          <label className="text-slate-655">Catégorie</label>
+                          <select 
+                            value={newExpenseForm.category}
+                            onChange={(e) => setNewExpenseForm({ ...newExpenseForm, category: e.target.value })}
+                            className="p-2 bg-slate-50 border border-slate-200 rounded text-slate-800"
+                          >
+                            <option value="SALARY">Salaires RH</option>
+                            <option value="RESTOCK">Achat Stocks</option>
+                            <option value="UTILITIES">Électricité / Eau</option>
+                            <option value="GENERAL">Frais Généraux</option>
+                          </select>
                         </div>
-                      );
-                    })
-                  )}
+                        <div className="flex flex-col gap-1">
+                          <label className="text-slate-655">Montant (FCFA)</label>
+                          <input 
+                            type="number"
+                            required
+                            placeholder="Ex: 85000"
+                            value={newExpenseForm.amount}
+                            onChange={(e) => setNewExpenseForm({ ...newExpenseForm, amount: e.target.value })}
+                            className="p-2 bg-slate-50 border border-slate-200 rounded text-slate-800"
+                          />
+                        </div>
+                      </div>
+
+                      <button type="submit" className="py-2.5 rounded bg-gradient-to-r from-[#c5a059] to-[#b08b45] text-slate-950 font-bold uppercase transition-all shadow-sm">
+                        Écrire au Livre
+                      </button>
+                    </form>
+                  </div>
                 </div>
               </div>
             )}
@@ -695,43 +1201,460 @@ export default function Dashboard() {
             {activeTab === "inventory" && (
               <div className="flex flex-col gap-6 animate-fadeIn">
                 <div>
-                  <h2 className="text-xl font-bold font-serif text-slate-900">Gestion des Stocks & Inventaires</h2>
-                  <p className="text-xs text-slate-550">Suivi des stocks F&B, blanchisserie et linge. Les lignes rouges indiquent un réapprovisionnement nécessaire.</p>
+                  <h2 className="text-xl font-bold font-serif text-slate-900">Gestion des Stocks & Épicerie</h2>
+                  <p className="text-xs text-slate-550">Ajustez les stocks en temps réel et recevez des alertes automatiques en cas de stock insuffisant.</p>
                 </div>
 
-                <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
-                  <table className="w-full text-left text-xs">
-                    <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider">
-                      <tr>
-                        <th className="px-6 py-4">Nom de l'article</th>
-                        <th className="px-6 py-4">Catégorie</th>
-                        <th className="px-6 py-4 text-center">Quantité</th>
-                        <th className="px-6 py-4 text-center">Alerte Mini</th>
-                        <th className="px-6 py-4 text-right">Statut Stock</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-200">
-                      {inventory.map((item) => {
-                        const isLow = item.quantity <= item.minThreshold;
-
-                        return (
-                          <tr key={item.id} className={`hover:bg-slate-50/50 transition-colors ${isLow ? 'bg-rose-500/[0.01]' : ''}`}>
-                            <td className="px-6 py-4 font-semibold text-slate-900">{item.name}</td>
-                            <td className="px-6 py-4 text-slate-655">{item.category}</td>
-                            <td className="px-6 py-4 text-center font-bold font-serif text-slate-800">{item.quantity} {item.unit}</td>
-                            <td className="px-6 py-4 text-center text-slate-500">{item.minThreshold} {item.unit}</td>
-                            <td className="px-6 py-4 text-right">
-                              <span className={`inline-flex px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
-                                isLow ? 'bg-rose-50 text-rose-700 border border-rose-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                              }`}>
-                                {isLow ? "Alerte réappro" : "Stock suffisant"}
-                              </span>
-                            </td>
+                <div className="grid lg:grid-cols-3 gap-8">
+                  {/* Stock table */}
+                  <div className="lg:col-span-2 flex flex-col gap-4">
+                    <h3 className="text-base font-bold text-slate-900 font-serif">Inventaire Général</h3>
+                    
+                    <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
+                      <table className="w-full text-left text-xs">
+                        <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider">
+                          <tr>
+                            <th className="px-5 py-3">Article</th>
+                            <th className="px-5 py-3">Catégorie</th>
+                            <th className="px-5 py-3 text-center">Quantité Actuelle</th>
+                            <th className="px-5 py-3 text-center">Ajuster rapide</th>
+                            <th className="px-5 py-3 text-right">Statut</th>
                           </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
+                        </thead>
+                        <tbody className="divide-y divide-slate-200 font-semibold">
+                          {inventory.map((item) => {
+                            const isLow = item.quantity <= item.minThreshold;
+
+                            return (
+                              <tr key={item.id} className={`hover:bg-slate-50/50 ${isLow ? 'bg-rose-500/[0.01]' : ''}`}>
+                                <td className="px-5 py-3 text-slate-900 font-bold">{item.name}</td>
+                                <td className="px-5 py-3 text-slate-500">{item.category}</td>
+                                <td className="px-5 py-3 text-center font-serif font-extrabold">{item.quantity} {item.unit}</td>
+                                <td className="px-5 py-3 text-center">
+                                  <div className="inline-flex gap-1">
+                                    <button 
+                                      onClick={() => handleInventoryStockChange(item.id, item.quantity - 1)}
+                                      className="px-2 py-0.5 rounded border border-slate-200 bg-slate-50 hover:bg-slate-100 font-extrabold"
+                                    >
+                                      -1
+                                    </button>
+                                    <button 
+                                      onClick={() => handleInventoryStockChange(item.id, item.quantity + 1)}
+                                      className="px-2 py-0.5 rounded border border-slate-200 bg-slate-50 hover:bg-slate-100 font-extrabold"
+                                    >
+                                      +1
+                                    </button>
+                                  </div>
+                                </td>
+                                <td className="px-5 py-3 text-right">
+                                  <span className={`inline-flex px-2 py-0.5 rounded text-[9px] font-bold uppercase ${
+                                    isLow ? 'bg-rose-50 text-rose-700 border border-rose-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                  }`}>
+                                    {isLow ? "Alerte réappro" : "Disponible"}
+                                  </span>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  {/* Add stock item form */}
+                  <div>
+                    <h3 className="text-base font-bold text-slate-900 font-serif mb-4">Nouvel Article</h3>
+                    <form onSubmit={handleCreateInventoryItem} className="p-4 rounded-xl bg-white border border-slate-200 shadow-sm flex flex-col gap-3.5 text-xs font-semibold">
+                      {inventoryError && <div className="p-2 rounded bg-rose-50 border border-rose-200 text-rose-700">{inventoryError}</div>}
+                      {inventorySuccess && <div className="p-2 rounded bg-emerald-50 border border-emerald-200 text-emerald-700">{inventorySuccess}</div>}
+
+                      <div className="flex flex-col gap-1">
+                        <label className="text-slate-655">Nom de l'article</label>
+                        <input 
+                          type="text"
+                          required
+                          placeholder="Ex: Savons d'accueil 30g"
+                          value={newInventoryForm.name}
+                          onChange={(e) => setNewInventoryForm({ ...newInventoryForm, name: e.target.value })}
+                          className="p-2 bg-slate-50 border border-slate-200 rounded text-slate-800"
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="flex flex-col gap-1">
+                          <label className="text-slate-655">Catégorie</label>
+                          <select 
+                            value={newInventoryForm.category}
+                            onChange={(e) => setNewInventoryForm({ ...newInventoryForm, category: e.target.value })}
+                            className="p-2 bg-slate-50 border border-slate-200 rounded text-slate-800"
+                          >
+                            <option value="Food">Nourriture / F&B</option>
+                            <option value="Beverage">Boissons / Bar</option>
+                            <option value="Linen">Linge & Literie</option>
+                            <option value="Housekeeping">Produits d'Entretien</option>
+                          </select>
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          <label className="text-slate-655">Unité</label>
+                          <input 
+                            type="text"
+                            required
+                            placeholder="Ex: kg, unit, bottle"
+                            value={newInventoryForm.unit}
+                            onChange={(e) => setNewInventoryForm({ ...newInventoryForm, unit: e.target.value })}
+                            className="p-2 bg-slate-50 border border-slate-200 rounded text-slate-800"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="flex flex-col gap-1">
+                          <label className="text-slate-655">Qte Initiale</label>
+                          <input 
+                            type="number"
+                            required
+                            value={newInventoryForm.quantity}
+                            onChange={(e) => setNewInventoryForm({ ...newInventoryForm, quantity: e.target.value })}
+                            className="p-2 bg-slate-50 border border-slate-200 rounded text-slate-800"
+                          />
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          <label className="text-slate-655">Seuil Alerte</label>
+                          <input 
+                            type="number"
+                            required
+                            value={newInventoryForm.minThreshold}
+                            onChange={(e) => setNewInventoryForm({ ...newInventoryForm, minThreshold: e.target.value })}
+                            className="p-2 bg-slate-50 border border-slate-200 rounded text-slate-800"
+                          />
+                        </div>
+                      </div>
+
+                      <button type="submit" className="py-2.5 rounded bg-gradient-to-r from-[#0d5ca3] to-[#1e40af] text-white font-bold uppercase transition-all shadow-sm">
+                        Ajouter Article
+                      </button>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* TAB CONTENT: RESTAURANT & BAR */}
+            {activeTab === "restaurant" && (
+              <div className="flex flex-col gap-6 animate-fadeIn">
+                <div>
+                  <h2 className="text-xl font-bold font-serif text-slate-900">Restaurant & Pool Bar</h2>
+                  <p className="text-xs text-slate-550">Saisissez les tickets de commande en direct et suivez la facturation.</p>
+                </div>
+
+                <div className="grid lg:grid-cols-3 gap-8">
+                  {/* Live orders registry */}
+                  <div className="lg:col-span-2 flex flex-col gap-4">
+                    <h3 className="text-base font-bold text-slate-900 font-serif">Commandes Actives</h3>
+
+                    <div className="flex flex-col gap-3">
+                      {orders.filter(o => o.status !== "CANCELLED").length === 0 ? (
+                        <div className="p-6 text-center bg-white border border-slate-200 rounded-xl text-slate-450 text-xs">
+                          Aucune commande active.
+                        </div>
+                      ) : (
+                        orders.filter(o => o.status !== "CANCELLED").map((order) => {
+                          const orderDate = new Date(order.createdAt).toLocaleTimeString("fr-FR", { hour: '2-digit', minute: '2-digit' });
+                          const isPaid = order.status === "PAID";
+                          const isServed = order.status === "SERVED";
+
+                          return (
+                            <div key={order.id} className="p-4 bg-white border border-slate-200 rounded-xl shadow-sm flex flex-col sm:flex-row justify-between sm:items-center gap-4 text-xs font-semibold">
+                              <div>
+                                <div className="flex items-center gap-2 mb-1.5">
+                                  <span className="px-2 py-0.5 rounded text-[9px] font-extrabold bg-[#0d5ca3]/15 text-[#0d5ca3]">{order.type}</span>
+                                  {order.tableNumber && <span className="text-xs text-slate-600 font-bold">{order.tableNumber}</span>}
+                                  {order.roomNumber && <span className="text-xs text-slate-600 font-bold">Chambre {order.roomNumber}</span>}
+                                </div>
+                                <div className="flex flex-col gap-1 pl-1">
+                                  {order.items?.map((item: any) => (
+                                    <span key={item.id} className="text-slate-800 text-[11px] font-bold">
+                                      - {item.dishName} <span className="text-slate-400 font-normal">x{item.quantity}</span>
+                                    </span>
+                                  ))}
+                                </div>
+                                <div className="text-[10px] text-slate-400 mt-2">
+                                  <span>📅 Commande reçue à {orderDate}</span> | <span className="text-slate-900 font-extrabold">Total : {order.totalPrice.toLocaleString("fr-FR")} F</span>
+                                </div>
+                              </div>
+
+                              <div className="flex flex-col sm:items-end gap-1.5 shrink-0">
+                                <span className={`text-[10px] font-bold uppercase tracking-wider ${
+                                  isPaid ? 'text-emerald-600 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded' 
+                                  : 'text-[#b08b45] bg-[#c5a059]/10 border border-[#c5a059]/20 px-1.5 py-0.5 rounded'
+                                }`}>
+                                  {order.status}
+                                </span>
+
+                                {!isPaid && (
+                                  <div className="flex gap-1 mt-1">
+                                    {!isServed && (
+                                      <button 
+                                        onClick={() => handleOrderUpdateStatus(order.id, "SERVED")}
+                                        className="px-2.5 py-1 rounded text-[9px] font-extrabold bg-[#0d5ca3] text-white hover:bg-[#0d5ca3]/90"
+                                      >
+                                        Servi
+                                      </button>
+                                    )}
+                                    <button 
+                                      onClick={() => handleOrderUpdateStatus(order.id, "PAID")}
+                                      className="px-2.5 py-1 rounded text-[9px] font-extrabold bg-gradient-to-r from-[#c5a059] to-[#b08b45] text-slate-950 shadow-sm"
+                                    >
+                                      Encaisser
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Place Order form */}
+                  <div>
+                    <h3 className="text-base font-bold text-slate-900 font-serif mb-4">Prise de Commande</h3>
+                    <form onSubmit={handleCreateOrder} className="p-4 rounded-xl bg-white border border-slate-200 shadow-sm flex flex-col gap-3.5 text-xs font-semibold">
+                      {orderError && <div className="p-2 rounded bg-rose-50 border border-rose-200 text-rose-700">{orderError}</div>}
+                      {orderSuccess && <div className="p-2 rounded bg-emerald-50 border border-emerald-200 text-emerald-700">{orderSuccess}</div>}
+
+                      <div className="flex flex-col gap-1">
+                        <label className="text-slate-655">Point d'Activité</label>
+                        <select 
+                          value={newOrderForm.type}
+                          onChange={(e) => setNewOrderForm({ ...newOrderForm, type: e.target.value })}
+                          className="p-2 bg-slate-50 border border-slate-200 rounded text-slate-800"
+                        >
+                          <option value="RESTAURANT">Restaurant</option>
+                          <option value="BAR">Pool Bar Lounge</option>
+                          <option value="ROOM_SERVICE">Service de Chambre</option>
+                        </select>
+                      </div>
+
+                      {newOrderForm.type === "ROOM_SERVICE" ? (
+                        <div className="flex flex-col gap-1">
+                          <label className="text-slate-655">Numéro de Chambre</label>
+                          <input 
+                            type="text"
+                            required
+                            placeholder="Ex: 101"
+                            value={newOrderForm.roomNumber}
+                            onChange={(e) => setNewOrderForm({ ...newOrderForm, roomNumber: e.target.value })}
+                            className="p-2 bg-slate-50 border border-slate-200 rounded text-slate-800"
+                          />
+                        </div>
+                      ) : (
+                        <div className="flex flex-col gap-1">
+                          <label className="text-slate-655">Table de Service</label>
+                          <input 
+                            type="text"
+                            required
+                            placeholder="Ex: Table 4"
+                            value={newOrderForm.tableNumber}
+                            onChange={(e) => setNewOrderForm({ ...newOrderForm, tableNumber: e.target.value })}
+                            className="p-2 bg-slate-50 border border-slate-200 rounded text-slate-800"
+                          />
+                        </div>
+                      )}
+
+                      <div className="flex flex-col gap-1">
+                        <label className="text-slate-655">Menu (F&B)</label>
+                        <select 
+                          required
+                          value={newOrderForm.dishId}
+                          onChange={(e) => setNewOrderForm({ ...newOrderForm, dishId: e.target.value })}
+                          className="p-2 bg-slate-50 border border-slate-200 rounded text-slate-800"
+                        >
+                          <option value="">Sélectionner un produit...</option>
+                          {dishes.map((dish) => (
+                            <option key={dish.id} value={dish.id}>{dish.name} ({dish.price} F)</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div className="flex flex-col gap-1">
+                        <label className="text-slate-655">Quantité</label>
+                        <input 
+                          type="number"
+                          required
+                          value={newOrderForm.quantity}
+                          onChange={(e) => setNewOrderForm({ ...newOrderForm, quantity: e.target.value as any })}
+                          className="p-2 bg-slate-50 border border-slate-200 rounded text-slate-800"
+                        />
+                      </div>
+
+                      <button type="submit" className="py-2.5 rounded bg-gradient-to-r from-[#c5a059] to-[#b08b45] text-slate-950 font-bold uppercase transition-all shadow-sm">
+                        Valider ticket
+                      </button>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* TAB CONTENT: EVENT HALLS */}
+            {activeTab === "halls" && (
+              <div className="flex flex-col gap-6 animate-fadeIn">
+                <div>
+                  <h2 className="text-xl font-bold font-serif text-slate-900">Salles de Réception & Congrès</h2>
+                  <p className="text-xs text-slate-550">Planification des banquets, mariages et séminaires d'affaires.</p>
+                </div>
+
+                {/* Salles Listing grid */}
+                <div className="grid md:grid-cols-2 gap-6">
+                  {halls.map((hall) => (
+                    <div key={hall.id} className="p-4 bg-white border border-slate-200 rounded-xl shadow-sm flex gap-4">
+                      {hall.image && (
+                        <img 
+                          src={`/${hall.image}`} 
+                          alt={hall.name}
+                          className="w-24 h-24 object-cover rounded-lg border border-slate-200"
+                        />
+                      )}
+                      <div>
+                        <h4 className="text-sm font-extrabold text-[#0d5ca3] font-serif uppercase">{hall.name}</h4>
+                        <p className="text-[10px] text-slate-500 mt-1 leading-relaxed">{hall.description}</p>
+                        <div className="mt-3 flex flex-wrap gap-4 text-[11px] font-bold">
+                          <span className="text-slate-700">🎪 Capacité : {hall.capacity} pers.</span>
+                          <span className="text-[#b08b45] font-serif">💰 Tarif : {hall.pricePerHour.toLocaleString("fr-FR")} F/heure</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="grid lg:grid-cols-3 gap-8 mt-2">
+                  {/* Hall Bookings List */}
+                  <div className="lg:col-span-2 flex flex-col gap-4">
+                    <h3 className="text-base font-bold text-slate-900 font-serif">Planning des Réservations</h3>
+
+                    <div className="flex flex-col gap-3">
+                      {hallBookings.length === 0 ? (
+                        <div className="p-6 text-center bg-white border border-slate-200 rounded-xl text-slate-450 text-xs">
+                          Aucun événement programmé.
+                        </div>
+                      ) : (
+                        hallBookings.map((bk) => {
+                          const eventDate = new Date(bk.eventDate).toLocaleDateString("fr-FR", { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+                          const isConfirmed = bk.status === "CONFIRMED";
+
+                          return (
+                            <div key={bk.id} className="p-4 bg-white border border-slate-200 rounded-xl shadow-sm flex flex-col sm:flex-row justify-between sm:items-center gap-4 text-xs font-semibold">
+                              <div>
+                                <span className="px-2 py-0.5 rounded text-[9px] font-extrabold bg-[#0d5ca3]/15 text-[#0d5ca3] uppercase">{bk.hall?.name}</span>
+                                <h4 className="text-sm font-bold text-slate-900 font-serif mt-1.5 uppercase">{bk.clientName}</h4>
+                                <div className="text-[10px] text-slate-500 mt-1">
+                                  <span>📅 Date : {eventDate}</span> | <span>🕒 Durée : {bk.durationHours} heures</span>
+                                </div>
+                                <div className="text-[10px] text-slate-400 mt-0.5">
+                                  <span>📞 Contact : {bk.clientPhone}</span> | <span className="text-slate-900 font-extrabold">Total : {bk.totalPrice.toLocaleString("fr-FR")} F</span>
+                                </div>
+                              </div>
+
+                              <div className="flex flex-col sm:items-end gap-1.5 shrink-0">
+                                <span className={`text-[10px] font-bold uppercase ${
+                                  isConfirmed ? 'text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded' 
+                                  : 'text-[#b08b45] bg-[#c5a059]/10 border border-[#c5a059]/20 px-1.5 py-0.5 rounded animate-pulse'
+                                }`}>
+                                  {bk.status}
+                                </span>
+
+                                {!isConfirmed && (
+                                  <button 
+                                    onClick={() => handleHallBookingUpdateStatus(bk.id, "CONFIRMED")}
+                                    className="px-2.5 py-1 rounded text-[9px] font-extrabold bg-[#0d5ca3] text-white hover:bg-[#0d5ca3]/90 shadow-sm"
+                                  >
+                                    Confirmer & Encaisser
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Salles Form */}
+                  <div>
+                    <h3 className="text-base font-bold text-slate-900 font-serif mb-4">Réserver une Salle</h3>
+                    <form onSubmit={handleCreateHallBooking} className="p-4 rounded-xl bg-white border border-slate-200 shadow-sm flex flex-col gap-3.5 text-xs font-semibold">
+                      {hallError && <div className="p-2 rounded bg-rose-50 border border-rose-200 text-rose-700">{hallError}</div>}
+                      {hallSuccess && <div className="p-2 rounded bg-emerald-50 border border-emerald-200 text-emerald-700">{hallSuccess}</div>}
+
+                      <div className="flex flex-col gap-1">
+                        <label className="text-slate-655">Salle Événementielle</label>
+                        <select 
+                          required
+                          value={newHallBookingForm.hallId}
+                          onChange={(e) => setNewHallBookingForm({ ...newHallBookingForm, hallId: e.target.value })}
+                          className="p-2 bg-slate-50 border border-slate-200 rounded text-slate-800"
+                        >
+                          <option value="">Sélectionner...</option>
+                          {halls.map((h) => (
+                            <option key={h.id} value={h.id}>{h.name} ({h.pricePerHour} F/h)</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div className="flex flex-col gap-1">
+                        <label className="text-slate-655">Nom du client</label>
+                        <input 
+                          type="text"
+                          required
+                          placeholder="Ex: Entreprise Solibra"
+                          value={newHallBookingForm.clientName}
+                          onChange={(e) => setNewHallBookingForm({ ...newHallBookingForm, clientName: e.target.value })}
+                          className="p-2 bg-slate-50 border border-slate-200 rounded text-slate-800"
+                        />
+                      </div>
+
+                      <div className="flex flex-col gap-1">
+                        <label className="text-slate-655">Téléphone contact</label>
+                        <input 
+                          type="text"
+                          required
+                          placeholder="Ex: +225 07 00 00 00 00"
+                          value={newHallBookingForm.clientPhone}
+                          onChange={(e) => setNewHallBookingForm({ ...newHallBookingForm, clientPhone: e.target.value })}
+                          className="p-2 bg-slate-50 border border-slate-200 rounded text-slate-800"
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="flex flex-col gap-1">
+                          <label className="text-slate-655">Date</label>
+                          <input 
+                            type="datetime-local"
+                            required
+                            value={newHallBookingForm.eventDate}
+                            onChange={(e) => setNewHallBookingForm({ ...newHallBookingForm, eventDate: e.target.value })}
+                            className="p-2 bg-slate-50 border border-slate-200 rounded text-slate-800"
+                          />
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          <label className="text-slate-655">Heures</label>
+                          <input 
+                            type="number"
+                            required
+                            value={newHallBookingForm.durationHours}
+                            onChange={(e) => setNewHallBookingForm({ ...newHallBookingForm, durationHours: e.target.value })}
+                            className="p-2 bg-slate-50 border border-slate-200 rounded text-slate-800"
+                          />
+                        </div>
+                      </div>
+
+                      <button type="submit" className="py-2.5 rounded bg-gradient-to-r from-[#c5a059] to-[#b08b45] text-slate-950 font-bold uppercase transition-all shadow-sm">
+                        Planifier Événement
+                      </button>
+                    </form>
+                  </div>
                 </div>
               </div>
             )}

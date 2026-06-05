@@ -13,6 +13,8 @@ async function main() {
   await prisma.systemSetting.deleteMany({});
   await prisma.dishComponent.deleteMany({});
   await prisma.dish.deleteMany({});
+  await prisma.orderItem.deleteMany({});
+  await prisma.order.deleteMany({});
   await prisma.inventoryItem.deleteMany({});
   await prisma.service.deleteMany({});
   await prisma.staff.deleteMany({});
@@ -27,6 +29,8 @@ async function main() {
   await prisma.roomType.deleteMany({});
   await prisma.user.deleteMany({});
   await prisma.site.deleteMany({});
+  await prisma.hallBooking.deleteMany({});
+  await prisma.receptionHall.deleteMany({});
 
   console.log("Database cleared.");
 
@@ -52,13 +56,14 @@ async function main() {
   });
   console.log("System settings configured.");
 
-  // 4. Create Room Types
+  // 4. Create Room Types with custom image references
   const standard = await prisma.roomType.create({
     data: {
       name: "Chambre Standard",
       description: "Lit double, climatisation, TV, Wi-Fi, salle de bain privée.",
       price: 35000,
       capacity: 2,
+      image: "chambre.jpg"
     },
   });
 
@@ -68,6 +73,7 @@ async function main() {
       description: "Lit double, climatisation, TV, Wi-Fi, mini-bar, vue jardin ou piscine.",
       price: 50000,
       capacity: 2,
+      image: "chambre2.jpg"
     },
   });
 
@@ -77,6 +83,7 @@ async function main() {
       description: "Salon séparé, bureau, baignoire, coffre-fort, vue panoramique.",
       price: 75000,
       capacity: 2,
+      image: "suite.jpg"
     },
   });
 
@@ -86,6 +93,7 @@ async function main() {
       description: "Grand living room, kitchenette, terrasse privée, finitions luxe.",
       price: 120000,
       capacity: 4,
+      image: "suite2.jpg"
     },
   });
 
@@ -95,6 +103,7 @@ async function main() {
       description: "2 chambres, grand salon de réception, jacuzzi, service de majordome privé.",
       price: 250000,
       capacity: 4,
+      image: "suite presidentielle.jpg"
     },
   });
 
@@ -127,12 +136,12 @@ async function main() {
   }
   console.log("Rooms seeded.");
 
-  // 6. Create Users & Staff
+  // 6. Create Users & Staff (HR records)
   const adminUser = await prisma.user.create({
     data: {
       email: "admin@astoriapalace.ci",
       name: "Directeur Général",
-      password: "password123", // In a real app, hash this password
+      password: "password123",
       role: "ADMIN",
     },
   });
@@ -155,12 +164,34 @@ async function main() {
     },
   });
 
-  // Create Staff profiles
+  const govUser = await prisma.user.create({
+    data: {
+      email: "gouvernante@astoriapalace.ci",
+      name: "Marie-Claire Yao",
+      password: "password123",
+      role: "STAFF"
+    }
+  });
+
+  const barmanUser = await prisma.user.create({
+    data: {
+      email: "barman@astoriapalace.ci",
+      name: "Jean-Pierre Kouamé",
+      password: "password123",
+      role: "STAFF"
+    }
+  });
+
+  // Create Staff profiles (RH tracking)
   await prisma.staff.create({
     data: {
       userId: recepUser.id,
       siteId: site.id,
       position: "Receptionist",
+      salary: 220000,
+      contractType: "CDI",
+      shift: "Matin (06h - 14h)",
+      status: "ACTIVE",
     },
   });
 
@@ -169,7 +200,35 @@ async function main() {
       userId: chefUser.id,
       siteId: site.id,
       position: "Chef",
+      salary: 450000,
+      contractType: "CDI",
+      shift: "Administratif (08h - 17h)",
+      status: "ACTIVE",
     },
+  });
+
+  await prisma.staff.create({
+    data: {
+      userId: govUser.id,
+      siteId: site.id,
+      position: "Housekeeping",
+      salary: 180000,
+      contractType: "CDD",
+      shift: "Après-midi (14h - 22h)",
+      status: "ACTIVE"
+    }
+  });
+
+  await prisma.staff.create({
+    data: {
+      userId: barmanUser.id,
+      siteId: site.id,
+      position: "Bartender",
+      salary: 210000,
+      contractType: "CDI",
+      shift: "Nuit (22h - 06h)",
+      status: "ACTIVE"
+    }
   });
 
   console.log("Users and staff accounts seeded.");
@@ -245,6 +304,125 @@ async function main() {
   });
 
   console.log("Restaurant menu and dishes seeded.");
+
+  // 10. Create Reception Halls
+  const hall1 = await prisma.receptionHall.create({
+    data: {
+      name: "Grand Salon Djiboua",
+      capacity: 300,
+      pricePerHour: 50000,
+      description: "Grande salle des fêtes modulable, parfaite pour mariages, congrès et banquets d'entreprise.",
+      image: "salle de reception.jpg"
+    }
+  });
+
+  const hall2 = await prisma.receptionHall.create({
+    data: {
+      name: "Salon VIP Lagune",
+      capacity: 80,
+      pricePerHour: 25000,
+      description: "Salle de conférence de prestige avec vue panoramique et équipements de visio-conférence.",
+      image: "salle de reception2.jpg"
+    }
+  });
+  console.log("Reception halls seeded.");
+
+  // 11. Create Hall Bookings
+  await prisma.hallBooking.create({
+    data: {
+      hallId: hall1.id,
+      clientName: "Groupement Inter-Écoles CI",
+      clientPhone: "+225 05 55 44 33 22",
+      eventDate: new Date("2026-06-12T09:00:00Z"),
+      durationHours: 8,
+      totalPrice: 400000,
+      status: "CONFIRMED"
+    }
+  });
+
+  await prisma.hallBooking.create({
+    data: {
+      hallId: hall2.id,
+      clientName: "Ministère de la Transition Digitale",
+      clientPhone: "+225 07 77 88 99 00",
+      eventDate: new Date("2026-06-20T14:00:00Z"),
+      durationHours: 4,
+      totalPrice: 100000,
+      status: "PENDING"
+    }
+  });
+
+  // 12. Create Bar Items as Dishes with Category "Bar"
+  const beerItem = await prisma.dish.create({
+    data: {
+      name: "Bière Ivoirienne Bock Solibra",
+      category: "Bar",
+      description: "Bière blonde nationale servie très glacée.",
+      price: 2000,
+      siteId: site.id,
+      isActive: true
+    }
+  });
+
+  const cocktailItem = await prisma.dish.create({
+    data: {
+      name: "Astoria Lagoon Cocktail",
+      category: "Bar",
+      description: "Cocktail signature de la maison : rhum, jus d'ananas local, coco et sirop de gingembre.",
+      price: 5000,
+      siteId: site.id,
+      isActive: true
+    }
+  });
+
+  // 13. Create Food & Beverage Orders
+  const order1 = await prisma.order.create({
+    data: {
+      type: "RESTAURANT",
+      tableNumber: "Table N° 5",
+      status: "SERVED",
+      totalPrice: 15500,
+    }
+  });
+  await prisma.orderItem.createMany({
+    data: [
+      { orderId: order1.id, dishId: dish1.id, dishName: dish1.name, quantity: 1, price: 8500 },
+      { orderId: order1.id, dishId: dish2.id, dishName: dish2.name, quantity: 1, price: 7000 }
+    ]
+  });
+
+  const order2 = await prisma.order.create({
+    data: {
+      type: "BAR",
+      tableNumber: "Pool Bar Lounge",
+      status: "PAID",
+      totalPrice: 12000,
+    }
+  });
+  await prisma.orderItem.createMany({
+    data: [
+      { orderId: order2.id, dishId: cocktailItem.id, dishName: cocktailItem.name, quantity: 2, price: 5000 },
+      { orderId: order2.id, dishId: beerItem.id, dishName: beerItem.name, quantity: 1, price: 2000 }
+    ]
+  });
+
+  // 14. Create Bookkeeping Accounting Transactions (Corporate Incomes and Expenses)
+  await prisma.transaction.createMany({
+    data: [
+      // Incomes
+      { amount: 350000, type: "PAYMENT", status: "PAID", description: "Recette Hébergement Séjour Roger Traore", category: "RESERVATION" },
+      { amount: 15500, type: "PAYMENT", status: "PAID", description: "Recette F&B Restaurant Table 5", category: "FNB" },
+      { amount: 12000, type: "PAYMENT", status: "PAID", description: "Recette F&B Bar Salon Pool", category: "FNB" },
+      { amount: 400000, type: "PAYMENT", status: "PAID", description: "Location Salle de Réception Djiboua", category: "EVENTS" },
+      // Expenses
+      { amount: -450000, type: "EXPENSE", status: "PAID", description: "Salaires RH - Chef Cuisine", category: "SALARY" },
+      { amount: -220000, type: "EXPENSE", status: "PAID", description: "Salaires RH - Réceptionniste", category: "SALARY" },
+      { amount: -150000, type: "EXPENSE", status: "PAID", description: "Abonnement Électricité CIE Yopougon", category: "UTILITIES" },
+      { amount: -85000, type: "EXPENSE", status: "PAID", description: "Achats Approvisionnement Stocks Draps", category: "RESTOCK" },
+      { amount: -120000, type: "EXPENSE", status: "PAID", description: "Achats Ingrédients F&B Marché de Yopougon", category: "RESTOCK" }
+    ]
+  });
+  console.log("Accounting records and orders seeded.");
 
   console.log("Seeding completed successfully.");
 }

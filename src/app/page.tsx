@@ -119,15 +119,23 @@ export default async function Home() {
                 key={type.id} 
                 className="group flex flex-col rounded-xl overflow-hidden bg-slate-50 border border-slate-200/80 hover:border-[#0d5ca3]/40 hover:shadow-md transition-all duration-300 hover:translate-y-[-4px]"
               >
-                {/* Image Placeholder with Sapphire Blue gradient */}
-                <div className="relative h-48 bg-gradient-to-br from-[#0d5ca3]/10 to-slate-100 flex items-center justify-center overflow-hidden border-b border-slate-200">
+                {/* Real Image of the room type */}
+                <div className="relative h-48 overflow-hidden border-b border-slate-200 bg-slate-100">
+                  {type.image ? (
+                    <img 
+                      src={`/${type.image}`}
+                      alt={type.name}
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-[#0d5ca3]/10 to-slate-100 flex items-center justify-center">
+                      <span className="text-4xl font-serif text-slate-300 select-none uppercase tracking-widest">★ ★ ★ ★</span>
+                    </div>
+                  )}
                   <div className="absolute inset-0 bg-[#0d5ca3]/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                  <span className="text-4xl font-serif text-slate-300 select-none uppercase tracking-widest">
-                    ★ ★ ★ ★
-                  </span>
                   
                   {/* Floating Price tag */}
-                  <div className="absolute bottom-4 right-4 px-3 py-1 rounded bg-white border border-[#c5a059]/40 text-xs font-bold text-[#b08b45] tracking-wide shadow-sm">
+                  <div className="absolute bottom-4 right-4 px-3 py-1 rounded bg-white border border-[#c5a059]/40 text-xs font-bold text-[#b08b45] tracking-wide shadow-sm z-10">
                     {type.price.toLocaleString("fr-FR")} FCFA <span className="text-[10px] text-slate-500 font-normal">/ nuit</span>
                   </div>
                 </div>
@@ -235,12 +243,17 @@ export default async function Home() {
               </div>
             </div>
 
-            <div className="relative aspect-[4/3] rounded-2xl overflow-hidden bg-gradient-to-tr from-[#0d5ca3]/15 to-slate-100 border border-slate-200/80 flex items-center justify-center shadow-lg">
-              <div className="absolute inset-0 bg-[#0d5ca3]/5 opacity-60" />
-              <div className="z-10 text-center px-8">
-                <span className="text-6xl mb-4 block">🏊</span>
-                <h3 className="text-lg font-serif font-bold text-slate-900 mb-2">Espace Aquatique & Pool Bar</h3>
-                <p className="text-xs text-slate-600 max-w-sm mx-auto leading-relaxed">
+            <div className="relative aspect-[4/3] rounded-2xl overflow-hidden border border-slate-200/80 shadow-lg group">
+              <img 
+                src="/Piscine.jpg" 
+                alt="Espace Aquatique & Pool Bar" 
+                className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" 
+              />
+              <div className="absolute inset-0 bg-slate-900/40 opacity-70 transition-opacity" />
+              <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-8 z-10 text-white">
+                <span className="text-5xl mb-3 block">🏊</span>
+                <h3 className="text-lg font-serif font-bold mb-2">Espace Aquatique & Pool Bar</h3>
+                <p className="text-xs text-slate-200 max-w-sm mx-auto leading-relaxed font-medium">
                   Grillades au transat, cocktails tropicaux et relaxation totale au bord de l'eau.
                 </p>
               </div>

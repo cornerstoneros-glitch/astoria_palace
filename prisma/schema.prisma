@@ -26,6 +26,7 @@ model RoomType {
   description String?
   price       Float
   capacity    Int
+  image       String?  // Path to static image (e.g. chambre.jpg)
   rooms       Room[]
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -112,11 +113,12 @@ model LoyaltyProgram {
 model Transaction {
   id          String   @id @default(cuid())
   amount      Float
-  type        String   // INVOICE, PAYMENT, REFUND
+  type        String   // INVOICE, PAYMENT, REFUND, EXPENSE
   status      String   @default("PENDING") // PENDING, PAID, CANCELLED
   description String?
-  user        User     @relation(fields: [userId], references: [id])
-  userId      String
+  category    String   @default("GENERAL") // SALARY, RESTOCK, RESERVATION, FNB, UTILITIES, GENERAL
+  user        User?    @relation(fields: [userId], references: [id])
+  userId      String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
@@ -144,14 +146,18 @@ model Review {
 }
 
 model Staff {
-  id        String   @id @default(cuid())
-  user      User     @relation(fields: [userId], references: [id])
-  userId    String   @unique
-  site      Site     @relation(fields: [siteId], references: [id])
-  siteId    String
-  position  String   // Receptionist, Housekeeping, Manager, Chef, Waiter, Barman
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           String   @id @default(cuid())
+  user         User     @relation(fields: [userId], references: [id])
+  userId       String   @unique
+  site         Site     @relation(fields: [siteId], references: [id])
+  siteId       String
+  position     String   // Receptionist, Housekeeping, Manager, Chef, Waiter, Barman, Bartender
+  salary       Float    @default(150000)
+  contractType String   @default("CDI") // CDI, CDD, Stage, Extra
+  shift        String   @default("Matin (06h - 14h)") // Matin, Après-midi, Nuit, Administratif
+  status       String   @default("ACTIVE") // ACTIVE, CONGE, ABSENT, INACTIVE
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 }
 
 model Service {
@@ -200,6 +206,54 @@ model DishComponent {
   optional Boolean @default(false)
   dish     Dish    @relation(fields: [dishId], references: [id], onDelete: Cascade)
   dishId   String
+}
+
+model Order {
+  id          String      @id @default(cuid())
+  type        String      @default("RESTAURANT") // RESTAURANT, BAR, ROOM_SERVICE
+  tableNumber String?     // e.g. "Table 4"
+  roomNumber  String?     // For room service
+  status      String      @default("PENDING") // PENDING, SERVED, PAID, CANCELLED
+  totalPrice  Float
+  items       OrderItem[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+model OrderItem {
+  id        String   @id @default(cuid())
+  dishId    String
+  dishName  String
+  quantity  Int
+  price     Float
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId   String
+}
+
+model ReceptionHall {
+  id           String        @id @default(cuid())
+  name         String        // e.g. "Salon VIP Djiboua", "Grande Salle Lagune"
+  capacity     Int
+  pricePerHour Float
+  description  String?
+  image        String?       // salle de reception.jpg
+  bookings     HallBooking[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+}
+
+model HallBooking {
+  id            String        @id @default(cuid())
+  hall          ReceptionHall @relation(fields: [hallId], references: [id])
+  hallId        String
+  clientName    String
+  clientPhone   String
+  eventDate     DateTime
+  durationHours Int
+  totalPrice    Float
+  status        String        @default("PENDING") // PENDING, CONFIRMED, COMPLETED, CANCELLED
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
 }
 
 model SystemSetting {
