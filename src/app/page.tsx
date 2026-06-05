@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import BookingWidget from "./components/BookingWidget";
+import LoyaltySignupForm from "./components/LoyaltySignupForm";
+import FaqAccordion from "./components/FaqAccordion";
 
 export const revalidate = 0;
 
@@ -36,6 +38,19 @@ export default async function Home() {
   const events = await prisma.hotelEvent.findMany({
     where: { isActive: true, eventDate: { gte: now } },
     orderBy: { eventDate: "asc" }
+  });
+
+  const reviews = await prisma.review.findMany({
+    where: { rating: { gte: 4 } },
+    take: 6,
+    include: {
+      user: {
+        select: {
+          name: true,
+        }
+      }
+    },
+    orderBy: { createdAt: "desc" }
   });
 
   return (
@@ -168,6 +183,30 @@ export default async function Home() {
           </div>
 
           <BookingWidget />
+
+          {/* Rassurance Badges */}
+          <div className="mt-10 grid grid-cols-2 md:grid-cols-4 gap-6 text-center border-t border-b border-slate-100 py-8">
+            <div className="flex flex-col items-center group">
+              <div className="w-12 h-12 rounded-full bg-amber-500/10 flex items-center justify-center text-xl text-[#b08b45] group-hover:scale-110 transition-transform">🏆</div>
+              <span className="font-bold text-xs text-slate-800 mt-2 block">Meilleur Tarif Garanti</span>
+              <span className="text-[10px] text-slate-450 leading-relaxed max-w-40">Directement sur le site officiel de l'hôtel</span>
+            </div>
+            <div className="flex flex-col items-center group">
+              <div className="w-12 h-12 rounded-full bg-amber-500/10 flex items-center justify-center text-xl text-[#b08b45] group-hover:scale-110 transition-transform">💳</div>
+              <span className="font-bold text-xs text-slate-800 mt-2 block">Paiements Flexibles</span>
+              <span className="text-[10px] text-slate-450 leading-relaxed max-w-40">Mobile Money (Orange/MTN/Moov) & Cartes</span>
+            </div>
+            <div className="flex flex-col items-center group">
+              <div className="w-12 h-12 rounded-full bg-amber-500/10 flex items-center justify-center text-xl text-[#b08b45] group-hover:scale-110 transition-transform">🔄</div>
+              <span className="font-bold text-xs text-slate-800 mt-2 block">Annulation Souple</span>
+              <span className="text-[10px] text-slate-450 leading-relaxed max-w-40">Modifiez votre séjour sans frais jusqu'à 24h</span>
+            </div>
+            <div className="flex flex-col items-center group">
+              <div className="w-12 h-12 rounded-full bg-amber-500/10 flex items-center justify-center text-xl text-[#b08b45] group-hover:scale-110 transition-transform">🛎️</div>
+              <span className="font-bold text-xs text-slate-800 mt-2 block">Concierge & Sécurité</span>
+              <span className="text-[10px] text-slate-450 leading-relaxed max-w-40">Assistance 24h/24 et parking surveillé</span>
+            </div>
+          </div>
 
           {/* Types de chambres visuels */}
           <div className="mt-16 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
@@ -439,6 +478,94 @@ export default async function Home() {
               </div>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* ─── TÉMOIGNAGES / PROUVE SOCIALE ───────────────────────────────────── */}
+      <section className="px-6 lg:px-16 py-20 bg-slate-100/50 border-t border-slate-200/80">
+        <div className="max-w-6xl mx-auto text-center">
+          <p className="text-xs font-bold text-[#c5a059] uppercase tracking-widest mb-2">Preuve de notre excellence</p>
+          <h2 className="text-3xl md:text-4xl font-bold font-serif text-slate-900 leading-tight mb-12">
+            Ce que disent nos clients
+          </h2>
+          <div className="grid md:grid-cols-3 gap-6 text-left">
+            {reviews.map((rev) => (
+              <div key={rev.id} className="p-6 bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <span className="px-2 py-0.5 rounded text-[9px] font-extrabold bg-[#0d5ca3]/10 text-[#0d5ca3] border border-[#0d5ca3]/20 uppercase">
+                      {rev.category || "Hôtel"}
+                    </span>
+                    <span className="text-[#b08b45] text-sm">{"★".repeat(rev.rating)}{"☆".repeat(5 - rev.rating)}</span>
+                  </div>
+                  <p className="text-slate-600 text-xs md:text-sm font-semibold italic leading-relaxed mb-6">
+                    "{rev.comment}"
+                  </p>
+                </div>
+                <div className="border-t border-slate-100 pt-3">
+                  <span className="block font-bold text-slate-900 text-xs uppercase font-serif">
+                    {rev.user?.name || "Client vérifié"}
+                  </span>
+                  <span className="block text-[10px] text-slate-400 font-normal">
+                    Séjour en {new Date(rev.createdAt).toLocaleDateString("fr-FR")}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ─── CLUB FIDÉLITÉ (LOYALTY) ────────────────────────────────────────── */}
+      <section className="px-6 lg:px-16 py-20 border-t border-slate-200/80 bg-white">
+        <div className="max-w-6xl mx-auto">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <div className="space-y-6">
+              <p className="text-xs font-bold text-[#c5a059] uppercase tracking-widest mb-2">Club Privé Astoria</p>
+              <h2 className="text-3xl md:text-4xl font-bold font-serif text-slate-900 leading-tight">
+                Rejoignez le Club & Profitez d'avantages exclusifs
+              </h2>
+              <p className="text-slate-600 text-sm leading-relaxed">
+                Devenez membre dès aujourd'hui pour cumuler des points à chaque séjour, sur vos repas et vos événements, et débloquez des surclassements et privilèges exclusifs.
+              </p>
+              
+              <div className="grid grid-cols-2 gap-4 text-xs font-bold">
+                <div className="p-4 rounded-xl bg-slate-50 border border-slate-200">
+                  <span className="block text-[#0d5ca3] text-sm">✨ Nuitées Gratuites</span>
+                  <span className="text-slate-500 text-[10px] font-normal mt-1 block">Convertissez vos points en séjours de rêve</span>
+                </div>
+                <div className="p-4 rounded-xl bg-slate-50 border border-slate-200">
+                  <span className="block text-[#c5a059] text-sm">👑 Surclassements VIP</span>
+                  <span className="text-slate-500 text-[10px] font-normal mt-1 block">Accès prioritaire aux Suites Présidentielles</span>
+                </div>
+                <div className="p-4 rounded-xl bg-slate-50 border border-slate-200">
+                  <span className="block text-[#0d5ca3] text-sm">🍳 Petit Déjeuner Offert</span>
+                  <span className="text-slate-500 text-[10px] font-normal mt-1 block">Inclus dès le niveau Silver du club</span>
+                </div>
+                <div className="p-4 rounded-xl bg-slate-50 border border-slate-200">
+                  <span className="block text-[#c5a059] text-sm">✈️ Transfert Privé</span>
+                  <span className="text-slate-500 text-[10px] font-normal mt-1 block">Navette aéroport offerte pour nos membres Gold</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-center">
+              <LoyaltySignupForm />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ─── FAQ SECTION ────────────────────────────────────────────────────── */}
+      <section className="px-6 lg:px-16 py-20 bg-slate-50 border-t border-slate-200/80">
+        <div className="max-w-4xl mx-auto text-center space-y-12">
+          <div>
+            <p className="text-xs font-bold text-[#c5a059] uppercase tracking-widest mb-2">Des questions ?</p>
+            <h2 className="text-3xl md:text-4xl font-bold font-serif text-slate-900">Foire Aux Questions</h2>
+            <p className="text-slate-550 text-xs md:text-sm mt-2 font-semibold">Toutes les informations pratiques indispensables pour votre prochain séjour à l'Astoria Palace.</p>
+          </div>
+          
+          <FaqAccordion />
         </div>
       </section>
 

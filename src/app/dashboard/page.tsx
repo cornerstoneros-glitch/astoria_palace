@@ -2,6 +2,11 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import AnalyticsPanel from "./components/AnalyticsPanel";
+import HousekeepingPanel from "./components/HousekeepingPanel";
+import ConciergePanel from "./components/ConciergePanel";
+import CrmPanel from "./components/CrmPanel";
+import NightAuditPanel from "./components/NightAuditPanel";
 
 export default function Dashboard() {
   // Database datasets
@@ -23,8 +28,8 @@ export default function Dashboard() {
   const [users, setUsers] = useState<any[]>([]);
   const [settings, setSettings] = useState<any>({});
   
-  // Tab Navigation (rooms, hr, accounting, inventory, restaurant, halls, marketing)
-  const [activeTab, setActiveTab] = useState<string>("rooms");
+  // Tab Navigation (analytics, rooms, hr, accounting, inventory, restaurant, halls, marketing)
+  const [activeTab, setActiveTab] = useState<string>("analytics");
 
 
   // Load States
@@ -790,116 +795,185 @@ export default function Dashboard() {
         </div>
       ) : (
         <div className="flex-1 flex flex-col lg:flex-row">
-          
           {/* SIDEBAR NAVIGATION */}
-          <aside className="w-full lg:w-64 border-b lg:border-b-0 lg:border-r border-slate-200 bg-slate-50 p-6 flex flex-col gap-6">
-            <div>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Menu Principal</p>
-              <nav className="flex flex-col gap-1.5 text-xs font-bold uppercase tracking-wider">
-                <button 
-                  onClick={() => setActiveTab("rooms")}
-                  className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-left transition-all ${
-                    activeTab === "rooms" 
-                      ? "bg-[#0d5ca3] text-white shadow-md shadow-blue-500/10" 
-                      : "text-slate-650 hover:bg-slate-200/50 hover:text-slate-900"
-                  }`}
-                >
-                  <span className="text-base">🏨</span>
-                  Chambres ({totalRooms})
-                </button>
+          <aside className="w-full lg:w-64 border-b lg:border-b-0 lg:border-r border-slate-200 bg-slate-50 p-6 flex flex-col gap-6 font-sans">
+            <div className="flex flex-col gap-4">
+              <div>
+                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 px-2">Hébergement & Services</p>
+                <nav className="flex flex-col gap-1 text-[11px] font-bold uppercase tracking-wide">
+                  <button 
+                    onClick={() => setActiveTab("analytics")}
+                    className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-left transition-all ${
+                      activeTab === "analytics" 
+                        ? "bg-[#0d5ca3] text-white shadow-sm" 
+                        : "text-slate-600 hover:bg-slate-200/50 hover:text-slate-900"
+                    }`}
+                  >
+                    <span className="text-sm">📊</span>
+                    Analytique & KPIs
+                  </button>
 
-                <button 
-                  onClick={() => setActiveTab("hr")}
-                  className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-left transition-all ${
-                    activeTab === "hr" 
-                      ? "bg-[#0d5ca3] text-white shadow-md shadow-blue-500/10" 
-                      : "text-slate-650 hover:bg-slate-200/50 hover:text-slate-900"
-                  }`}
-                >
-                  <span className="text-base">👔</span>
-                  RH (Employés : {staff.length})
-                </button>
+                  <button 
+                    onClick={() => setActiveTab("rooms")}
+                    className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-left transition-all ${
+                      activeTab === "rooms" 
+                        ? "bg-[#0d5ca3] text-white shadow-sm" 
+                        : "text-slate-600 hover:bg-slate-200/50 hover:text-slate-900"
+                    }`}
+                  >
+                    <span className="text-sm">🏨</span>
+                    Chambres ({totalRooms})
+                  </button>
 
-                <button 
-                  onClick={() => setActiveTab("accounting")}
-                  className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-left transition-all ${
-                    activeTab === "accounting" 
-                      ? "bg-[#0d5ca3] text-white shadow-md shadow-blue-500/10" 
-                      : "text-slate-655 hover:bg-slate-200/50 hover:text-slate-900"
-                  }`}
-                >
-                  <span className="text-base">📈</span>
-                  Comptabilité (Livre)
-                </button>
+                  <button 
+                    onClick={() => setActiveTab("housekeeping")}
+                    className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-left transition-all ${
+                      activeTab === "housekeeping" 
+                        ? "bg-[#0d5ca3] text-white shadow-sm" 
+                        : "text-slate-600 hover:bg-slate-200/50 hover:text-slate-900"
+                    }`}
+                  >
+                    <span className="text-sm">🧹</span>
+                    Housekeeping ({rooms.filter(r => r.status === 'CLEANING' || r.status === 'MAINTENANCE').length})
+                  </button>
 
-                <button 
-                  onClick={() => setActiveTab("inventory")}
-                  className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-left transition-all ${
-                    activeTab === "inventory" 
-                      ? "bg-[#0d5ca3] text-white shadow-md shadow-blue-500/10" 
-                      : "text-slate-655 hover:bg-slate-200/50 hover:text-slate-900"
-                  }`}
-                >
-                  <span className="text-base">📦</span>
-                  Stocks & Épicerie 
-                  {lowStockCount > 0 && (
-                    <span className="ml-auto bg-rose-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
-                      {lowStockCount}
-                    </span>
-                  )}
-                </button>
+                  <button 
+                    onClick={() => setActiveTab("concierge")}
+                    className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-left transition-all ${
+                      activeTab === "concierge" 
+                        ? "bg-[#0d5ca3] text-white shadow-sm" 
+                        : "text-slate-600 hover:bg-slate-200/50 hover:text-slate-900"
+                    }`}
+                  >
+                    <span className="text-sm">🛎️</span>
+                    Conciergerie ({concierge.filter(c => c.status !== 'COMPLETED' && c.status !== 'CANCELLED').length})
+                  </button>
+                </nav>
+              </div>
 
-                <button 
-                  onClick={() => setActiveTab("restaurant")}
-                  className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-left transition-all ${
-                    activeTab === "restaurant" 
-                      ? "bg-[#0d5ca3] text-white shadow-md shadow-blue-500/10" 
-                      : "text-slate-655 hover:bg-slate-200/50 hover:text-slate-900"
-                  }`}
-                >
-                  <span className="text-base">🍽️</span>
-                  Restaurant & Bar ({orders.filter(o => o.status !== 'PAID' && o.status !== 'CANCELLED').length})
-                </button>
+              <div>
+                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 px-2">Restauration & Congrès</p>
+                <nav className="flex flex-col gap-1 text-[11px] font-bold uppercase tracking-wide">
+                  <button 
+                    onClick={() => setActiveTab("restaurant")}
+                    className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-left transition-all ${
+                      activeTab === "restaurant" 
+                        ? "bg-[#0d5ca3] text-white shadow-sm" 
+                        : "text-slate-600 hover:bg-slate-200/50 hover:text-slate-900"
+                    }`}
+                  >
+                    <span className="text-sm">🍽️</span>
+                    Restaurant & Bar ({orders.filter(o => o.status !== 'PAID' && o.status !== 'CANCELLED').length})
+                  </button>
 
-                <button 
-                  onClick={() => setActiveTab("halls")}
-                  className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-left transition-all ${
-                    activeTab === "halls" 
-                      ? "bg-[#0d5ca3] text-white shadow-md shadow-blue-500/10" 
-                      : "text-slate-655 hover:bg-slate-200/50 hover:text-slate-900"
-                  }`}
-                >
-                  <span className="text-base">🎪</span>
-                  Réceptions / Salles
-                </button>
+                  <button 
+                    onClick={() => setActiveTab("halls")}
+                    className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-left transition-all ${
+                      activeTab === "halls" 
+                        ? "bg-[#0d5ca3] text-white shadow-sm" 
+                        : "text-slate-600 hover:bg-slate-200/50 hover:text-slate-900"
+                    }`}
+                  >
+                    <span className="text-sm">🎪</span>
+                    Salles / Congrès
+                  </button>
+                </nav>
+              </div>
 
-                <button 
-                  onClick={() => setActiveTab("rbac")}
-                  className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-left transition-all ${
-                    activeTab === "rbac" 
-                      ? "bg-[#0d5ca3] text-white shadow-md shadow-blue-500/10" 
-                      : "text-slate-655 hover:bg-slate-200/50 hover:text-slate-900"
-                  }`}
-                >
-                  <span className="text-base">🔑</span>
-                  Accès & Rôles
-                </button>
+              <div>
+                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 px-2">Gestion & Back Office</p>
+                <nav className="flex flex-col gap-1 text-[11px] font-bold uppercase tracking-wide">
+                  <button 
+                    onClick={() => setActiveTab("crm")}
+                    className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-left transition-all ${
+                      activeTab === "crm" 
+                        ? "bg-[#0d5ca3] text-white shadow-sm" 
+                        : "text-slate-600 hover:bg-slate-200/50 hover:text-slate-900"
+                    }`}
+                  >
+                    <span className="text-sm">👥</span>
+                    Clients & CRM
+                  </button>
 
-                <button 
-                  onClick={() => setActiveTab("marketing")}
-                  className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-left transition-all ${
-                    activeTab === "marketing" 
-                      ? "bg-[#0d5ca3] text-white shadow-md shadow-blue-500/10" 
-                      : "text-slate-655 hover:bg-slate-200/50 hover:text-slate-900"
-                  }`}
-                >
-                  <span className="text-base">📢</span>
-                  Marketing & Offres
-                </button>
-              </nav>
+                  <button 
+                    onClick={() => setActiveTab("hr")}
+                    className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-left transition-all ${
+                      activeTab === "hr" 
+                        ? "bg-[#0d5ca3] text-white shadow-sm" 
+                        : "text-slate-600 hover:bg-slate-200/50 hover:text-slate-900"
+                    }`}
+                  >
+                    <span className="text-sm">👔</span>
+                    RH (Employés : {staff.length})
+                  </button>
+
+                  <button 
+                    onClick={() => setActiveTab("accounting")}
+                    className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-left transition-all ${
+                      activeTab === "accounting" 
+                        ? "bg-[#0d5ca3] text-white shadow-sm" 
+                        : "text-slate-600 hover:bg-slate-200/50 hover:text-slate-900"
+                    }`}
+                  >
+                    <span className="text-sm">📈</span>
+                    Comptabilité
+                  </button>
+
+                  <button 
+                    onClick={() => setActiveTab("inventory")}
+                    className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-left transition-all ${
+                      activeTab === "inventory" 
+                        ? "bg-[#0d5ca3] text-white shadow-sm" 
+                        : "text-slate-655 hover:bg-slate-200/50 hover:text-slate-900"
+                    }`}
+                  >
+                    <span className="text-sm">📦</span>
+                    Stocks & Épicerie 
+                    {lowStockCount > 0 && (
+                      <span className="ml-auto bg-rose-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">
+                        {lowStockCount}
+                      </span>
+                    )}
+                  </button>
+
+                  <button 
+                    onClick={() => setActiveTab("marketing")}
+                    className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-left transition-all ${
+                      activeTab === "marketing" 
+                        ? "bg-[#0d5ca3] text-white shadow-sm" 
+                        : "text-slate-655 hover:bg-slate-200/50 hover:text-slate-900"
+                    }`}
+                  >
+                    <span className="text-sm">📢</span>
+                    Marketing / Offres
+                  </button>
+
+                  <button 
+                    onClick={() => setActiveTab("rbac")}
+                    className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-left transition-all ${
+                      activeTab === "rbac" 
+                        ? "bg-[#0d5ca3] text-white shadow-sm" 
+                        : "text-slate-655 hover:bg-slate-200/50 hover:text-slate-900"
+                    }`}
+                  >
+                    <span className="text-sm">🔑</span>
+                    Accès & Rôles
+                  </button>
+
+                  <button 
+                    onClick={() => setActiveTab("audit")}
+                    className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-left transition-all ${
+                      activeTab === "audit" 
+                        ? "bg-[#0d5ca3] text-white shadow-sm" 
+                        : "text-slate-655 hover:bg-slate-200/50 hover:text-slate-900"
+                    }`}
+                  >
+                    <span className="text-sm">🌙</span>
+                    Clôture & Settings
+                  </button>
+                </nav>
+              </div>
             </div>
-
-
 
             <div className="mt-auto pt-6 border-t border-slate-200 flex flex-col gap-3">
               <div className="p-3.5 rounded-lg bg-white border border-slate-200 text-xs shadow-sm">
@@ -2371,6 +2445,42 @@ export default function Dashboard() {
                 </div>
 
               </div>
+            )}
+
+            {activeTab === "analytics" && (
+              <AnalyticsPanel rooms={rooms} transactions={transactions} />
+            )}
+
+            {activeTab === "housekeeping" && (
+              <HousekeepingPanel rooms={rooms} onRoomStatusChange={handleRoomStatusChange} />
+            )}
+
+            {activeTab === "concierge" && (
+              <ConciergePanel 
+                concierge={concierge} 
+                rooms={rooms} 
+                onStatusChange={async (id, status) => {
+                  try {
+                    await fetch(`/api/concierge/${id}`, {
+                      method: "PATCH",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ status }),
+                    });
+                    fetchData();
+                  } catch (err) {
+                    console.error(err);
+                  }
+                }}
+                onRefresh={fetchData}
+              />
+            )}
+
+            {activeTab === "crm" && (
+              <CrmPanel users={users} onRefresh={fetchData} />
+            )}
+
+            {activeTab === "audit" && (
+              <NightAuditPanel settings={settings} onRefresh={fetchData} />
             )}
 
           </main>

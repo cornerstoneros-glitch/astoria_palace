@@ -27,6 +27,13 @@ export async function GET(request: NextRequest) {
         role: true,
         createdAt: true,
         updatedAt: true,
+        loyalty: true,
+        preferences: true,
+        reviews: {
+          orderBy: {
+            createdAt: "desc",
+          },
+        },
       },
       orderBy: {
         createdAt: "desc",

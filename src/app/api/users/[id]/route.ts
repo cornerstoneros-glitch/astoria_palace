@@ -15,7 +15,7 @@ export async function PATCH(
 
     const { id } = await params;
     const body = await request.json();
-    const { name, email, role, password } = body;
+    const { name, email, role, password, preferences, loyalty } = body;
 
     // Verify user exists
     const existingUser = await prisma.user.findUnique({
@@ -36,6 +36,40 @@ export async function PATCH(
     if (role !== undefined) updateData.role = role;
     if (password !== undefined) updateData.password = password;
 
+    if (preferences !== undefined) {
+      updateData.preferences = {
+        upsert: {
+          create: {
+            pillowType: preferences.pillowType || null,
+            beverages: preferences.beverages || null,
+            cleaningTime: preferences.cleaningTime || null,
+            dietaryNotes: preferences.dietaryNotes || null,
+          },
+          update: {
+            pillowType: preferences.pillowType || null,
+            beverages: preferences.beverages || null,
+            cleaningTime: preferences.cleaningTime || null,
+            dietaryNotes: preferences.dietaryNotes || null,
+          },
+        },
+      };
+    }
+
+    if (loyalty !== undefined) {
+      updateData.loyalty = {
+        upsert: {
+          create: {
+            points: parseInt(loyalty.points) || 0,
+            tier: loyalty.tier || "STANDARD",
+          },
+          update: {
+            points: parseInt(loyalty.points) || 0,
+            tier: loyalty.tier || "STANDARD",
+          },
+        },
+      };
+    }
+
     const updatedUser = await prisma.user.update({
       where: { id },
       data: updateData,
@@ -45,6 +79,8 @@ export async function PATCH(
         name: true,
         role: true,
         updatedAt: true,
+        loyalty: true,
+        preferences: true,
       },
     });
 
