@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, Outfit } from "next/font/google";
+import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
 
 const inter = Inter({
@@ -7,13 +7,13 @@ const inter = Inter({
   subsets: ["latin"],
 });
 
-const outfit = Outfit({
-  variable: "--font-outfit",
+const playfair = Playfair_Display({
+  variable: "--font-playfair",
   subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
-  title: "Hôtel Astoria Palace — Complexe Hôtelier de Luxe à Abidjan",
+  title: "Hôtel Astoria Palace — Complexe Hôtelier 4 Étoiles à Abidjan",
   description: "Système de Gestion Hôtelière Intégré (SGHI) de l'Hôtel Astoria Palace, Yopougon, Côte d'Ivoire. Hébergement de standing supérieur, restauration raffinée, loisirs et événements d'exception.",
 };
 
@@ -25,9 +25,9 @@ export default function RootLayout({
   return (
     <html
       lang="fr"
-      className={`${inter.variable} ${outfit.variable} h-full antialiased dark`}
+      className={`${inter.variable} ${playfair.variable} h-full antialiased dark`}
     >
-      <body className="min-h-full bg-[#0d0f14] text-slate-100 font-sans flex flex-col">
+      <body className="min-h-full bg-[#080a0f] text-slate-100 font-sans flex flex-col">
         {children}
       </body>
     </html>

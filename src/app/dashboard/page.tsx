@@ -77,7 +77,7 @@ export default function Dashboard() {
       if (testJson.status === "success") {
         setRoomTypes(testJson.data.roomTypes || []);
         setSites(testJson.data.sites || []);
-        // Setup mock users for booking dropdown (excluding staff/admin profiles for client booking)
+        // Setup mock users for booking dropdown
         setUsers([
           { id: "client-id-1", name: "DIBONA ROGER TRAORE", email: "roger.traore@gmail.com" },
           { id: "client-id-2", name: "KOUAME PATRICE YAO", email: "patrice.yao@yahoo.fr" },
@@ -106,7 +106,6 @@ export default function Dashboard() {
       });
       const data = await response.json();
       if (data.status === "success") {
-        // Optimistic UI update
         setRooms(rooms.map((r) => (r.id === roomId ? data.data : r)));
       }
     } catch (err) {
@@ -201,25 +200,32 @@ export default function Dashboard() {
   const occupiedCount = rooms.filter((r) => r.status === "OCCUPIED").length;
   const cleaningCount = rooms.filter((r) => r.status === "CLEANING").length;
   const maintenanceCount = rooms.filter((r) => r.status === "MAINTENANCE").length;
-  const availableCount = rooms.filter((r) => r.status === "AVAILABLE").length;
   const lowStockCount = inventory.filter((item) => item.quantity <= item.minThreshold).length;
 
   return (
     <div className="flex flex-col min-h-screen bg-[#07090c] text-slate-100 font-sans">
       
       {/* HEADER */}
-      <header className="border-b border-[#1b2538] bg-[#0d121c] px-6 py-4 flex items-center justify-between">
+      <header className="border-b border-[#1b2538] bg-[#0c1017] px-6 py-3.5 flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Link href="/" className="text-xs font-bold tracking-widest text-amber-500 uppercase border border-amber-500/30 px-2.5 py-1 rounded hover:bg-amber-500/10 transition-colors">
-            ← Site Web
+          <Link href="/" className="text-xs font-bold tracking-widest text-[#c5a059] uppercase border border-[#c5a059]/30 px-2.5 py-1 rounded hover:bg-[#c5a059]/10 transition-colors">
+            ← Site Client
           </Link>
-          <div className="flex flex-col">
-            <h1 className="text-lg font-bold font-serif bg-gradient-to-r from-amber-400 to-yellow-100 bg-clip-text text-transparent">
-              SGHI — ASTORIA PALACE
-            </h1>
-            <span className="text-[10px] text-slate-400 font-medium uppercase tracking-widest">
-              Système de Gestion Hôtelière Intégré
-            </span>
+          <div className="flex items-center gap-3">
+            <img 
+              src="/logo.jpg" 
+              alt="Logo Astoria Palace" 
+              className="h-10 w-auto object-contain rounded bg-white p-0.5 border border-[#1b2538]" 
+            />
+            <div className="flex flex-col">
+              <h1 className="text-base font-extrabold font-serif text-white tracking-wide leading-tight">
+                SGHI — ASTORIA PALACE
+              </h1>
+              <div className="flex items-center gap-0.5 text-[9px] text-[#c5a059] font-bold">
+                <span>★</span><span>★</span><span>★</span><span>★</span>
+                <span className="text-slate-400 font-sans normal-case tracking-normal ml-2 text-[9px]">Console de Gestion</span>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -238,14 +244,14 @@ export default function Dashboard() {
 
       {loading ? (
         <div className="flex-1 flex flex-col items-center justify-center gap-3">
-          <div className="w-8 h-8 rounded-full border-4 border-amber-500 border-t-transparent animate-spin" />
+          <div className="w-8 h-8 rounded-full border-4 border-[#0d5ca3] border-t-transparent animate-spin" />
           <span className="text-sm text-slate-400">Synchronisation en cours...</span>
         </div>
       ) : (
         <div className="flex-1 flex flex-col lg:flex-row">
           
           {/* SIDEBAR NAVIGATION */}
-          <aside className="w-full lg:w-64 border-b lg:border-b-0 lg:border-r border-[#1b2538] bg-[#090d14] p-6 flex flex-col gap-6">
+          <aside className="w-full lg:w-64 border-b lg:border-b-0 lg:border-r border-[#1b2538] bg-[#080b12] p-6 flex flex-col gap-6">
             <div>
               <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3">Menu Principal</p>
               <nav className="flex flex-col gap-1 text-sm">
@@ -253,7 +259,7 @@ export default function Dashboard() {
                   onClick={() => setActiveTab("rooms")}
                   className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-left transition-all font-medium ${
                     activeTab === "rooms" 
-                      ? "bg-amber-500 text-slate-950 font-bold shadow-md shadow-amber-500/10" 
+                      ? "bg-[#c5a059] text-slate-950 font-bold shadow-md shadow-amber-500/10" 
                       : "text-slate-300 hover:bg-[#131924]"
                   }`}
                 >
@@ -265,7 +271,7 @@ export default function Dashboard() {
                   onClick={() => setActiveTab("reservations")}
                   className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-left transition-all font-medium ${
                     activeTab === "reservations" 
-                      ? "bg-amber-500 text-slate-950 font-bold shadow-md shadow-amber-500/10" 
+                      ? "bg-[#c5a059] text-slate-950 font-bold shadow-md shadow-amber-500/10" 
                       : "text-slate-300 hover:bg-[#131924]"
                   }`}
                 >
@@ -277,7 +283,7 @@ export default function Dashboard() {
                   onClick={() => setActiveTab("concierge")}
                   className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-left transition-all font-medium ${
                     activeTab === "concierge" 
-                      ? "bg-amber-500 text-slate-950 font-bold shadow-md shadow-amber-500/10" 
+                      ? "bg-[#c5a059] text-slate-950 font-bold shadow-md shadow-amber-500/10" 
                       : "text-slate-300 hover:bg-[#131924]"
                   }`}
                 >
@@ -289,7 +295,7 @@ export default function Dashboard() {
                   onClick={() => setActiveTab("inventory")}
                   className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-left transition-all font-medium ${
                     activeTab === "inventory" 
-                      ? "bg-amber-500 text-slate-950 font-bold shadow-md shadow-amber-500/10" 
+                      ? "bg-[#c5a059] text-slate-950 font-bold shadow-md shadow-amber-500/10" 
                       : "text-slate-300 hover:bg-[#131924]"
                   }`}
                 >
@@ -305,7 +311,7 @@ export default function Dashboard() {
             </div>
 
             <div className="mt-auto pt-6 border-t border-[#1b2538]">
-              <div className="p-3.5 rounded-lg bg-[#0e131e] border border-[#1b2538] text-xs">
+              <div className="p-3.5 rounded-lg bg-[#0c1018] border border-[#1b2538] text-xs">
                 <span className="block font-bold text-slate-300 mb-1">Établissement</span>
                 <span className="block text-slate-400 font-medium">{sites[0]?.name || "Astoria Palace"}</span>
                 <span className="block text-slate-500 mt-1">{sites[0]?.location || "Yopougon, Abidjan"}</span>
@@ -318,7 +324,7 @@ export default function Dashboard() {
             
             {/* STATS OVERVIEW CARDS */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="p-4 rounded-xl bg-[#0e131f] border border-[#1b2538] hover:border-amber-500/20 transition-all flex flex-col justify-between">
+              <div className="p-4 rounded-xl bg-[#0e131f] border border-[#1b2538] hover:border-[#0d5ca3]/20 transition-all flex flex-col justify-between">
                 <span className="text-slate-400 text-xs font-semibold">Taux d'Occupation</span>
                 <div className="flex items-baseline gap-2 mt-2">
                   <span className="text-2xl font-bold font-serif text-white">
@@ -328,15 +334,15 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              <div className="p-4 rounded-xl bg-[#0e131f] border border-[#1b2538] hover:border-amber-500/20 transition-all flex flex-col justify-between">
+              <div className="p-4 rounded-xl bg-[#0e131f] border border-[#1b2538] hover:border-[#0d5ca3]/20 transition-all flex flex-col justify-between">
                 <span className="text-slate-400 text-xs font-semibold">Ménage requis</span>
                 <div className="flex items-baseline gap-2 mt-2">
-                  <span className="text-2xl font-bold font-serif text-amber-500">{cleaningCount}</span>
+                  <span className="text-2xl font-bold font-serif text-[#c5a059]">{cleaningCount}</span>
                   <span className="text-[10px] text-slate-500">chambres sales</span>
                 </div>
               </div>
 
-              <div className="p-4 rounded-xl bg-[#0e131f] border border-[#1b2538] hover:border-amber-500/20 transition-all flex flex-col justify-between">
+              <div className="p-4 rounded-xl bg-[#0e131f] border border-[#1b2538] hover:border-[#0d5ca3]/20 transition-all flex flex-col justify-between">
                 <span className="text-slate-400 text-xs font-semibold">Hors service (SAV)</span>
                 <div className="flex items-baseline gap-2 mt-2">
                   <span className="text-2xl font-bold font-serif text-rose-500">{maintenanceCount}</span>
@@ -344,7 +350,7 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              <div className="p-4 rounded-xl bg-[#0e131f] border border-[#1b2538] hover:border-amber-500/20 transition-all flex flex-col justify-between">
+              <div className="p-4 rounded-xl bg-[#0e131f] border border-[#1b2538] hover:border-[#0d5ca3]/20 transition-all flex flex-col justify-between">
                 <span className="text-slate-400 text-xs font-semibold">Alertes de Stock</span>
                 <div className="flex items-baseline gap-2 mt-2">
                   <span className={`text-2xl font-bold font-serif ${lowStockCount > 0 ? 'text-rose-500' : 'text-slate-400'}`}>
@@ -367,7 +373,7 @@ export default function Dashboard() {
                   {/* Legend colors */}
                   <div className="flex flex-wrap items-center gap-3 text-[10px] font-semibold text-slate-400 bg-[#090d14] px-4 py-2 border border-[#1e293b] rounded-lg">
                     <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-500" /> Libre</span>
-                    <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-amber-500" /> Occupée</span>
+                    <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#c5a059]" /> Occupée</span>
                     <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-indigo-500" /> Nettoyage</span>
                     <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-rose-500" /> Réparation</span>
                   </div>
@@ -382,19 +388,15 @@ export default function Dashboard() {
                     
                     let bgBorderClass = "border-[#1b2538] hover:border-emerald-500/40 bg-[#0c101a]";
                     let statusDot = "bg-emerald-500";
-                    let textColor = "text-emerald-400";
                     if (isOccupied) {
-                      bgBorderClass = "border-amber-500/20 hover:border-amber-500/40 bg-amber-500/[0.03]";
-                      statusDot = "bg-amber-500";
-                      textColor = "text-amber-400";
+                      bgBorderClass = "border-[#c5a059]/20 hover:border-[#c5a059]/40 bg-[#c5a059]/[0.03]";
+                      statusDot = "bg-[#c5a059]";
                     } else if (isCleaning) {
                       bgBorderClass = "border-indigo-500/20 hover:border-indigo-500/40 bg-indigo-500/[0.03]";
                       statusDot = "bg-indigo-500";
-                      textColor = "text-indigo-400";
                     } else if (isMaintenance) {
                       bgBorderClass = "border-rose-500/20 hover:border-rose-500/40 bg-rose-500/[0.03]";
                       statusDot = "bg-rose-500";
-                      textColor = "text-rose-400";
                     }
 
                     return (
@@ -416,7 +418,7 @@ export default function Dashboard() {
                           <select 
                             value={room.status}
                             onChange={(e) => handleRoomStatusChange(room.id, e.target.value)}
-                            className={`w-full text-[10px] py-1 bg-slate-900 border border-[#1b2538] rounded text-slate-300 font-bold focus:outline-none focus:border-amber-500`}
+                            className="w-full text-[10px] py-1 bg-slate-900 border border-[#1b2538] rounded text-slate-300 font-bold focus:outline-none focus:border-[#c5a059]"
                           >
                             <option value="AVAILABLE">Libre</option>
                             <option value="OCCUPIED">Occupée</option>
@@ -495,7 +497,7 @@ export default function Dashboard() {
                             {/* Actions block */}
                             <div className="flex flex-col sm:items-end gap-2 shrink-0">
                               <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
-                                Statut Séjour : <span className="text-amber-500">{res.status}</span>
+                                Statut Séjour : <span className="text-[#c5a059]">{res.status}</span>
                               </span>
 
                               <div className="flex flex-wrap items-center gap-2">
@@ -503,9 +505,9 @@ export default function Dashboard() {
                                 {!isKycSubmitted && (
                                   <button 
                                     onClick={() => setKycResId(res.id)}
-                                    className="px-3 py-1.5 rounded text-xs font-bold bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 transition-colors"
+                                    className="px-3 py-1.5 rounded text-xs font-bold bg-[#c5a059]/10 hover:bg-[#c5a059]/20 text-[#c5a059] border border-[#c5a059]/30 transition-colors animate-pulse"
                                   >
-                                    Enregistrer ID (Scan CNI)
+                                    Enregistrer ID (CNI)
                                   </button>
                                 )}
 
@@ -513,7 +515,7 @@ export default function Dashboard() {
                                 {res.status === "PENDING" && (
                                   <button 
                                     onClick={() => handleReservationStatusChange(res.id, "CONFIRMED")}
-                                    className="px-3 py-1.5 rounded text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-slate-950 transition-colors"
+                                    className="px-3 py-1.5 rounded text-xs font-bold bg-gradient-to-r from-[#0d5ca3] to-[#1e40af] hover:from-[#1e40af] hover:to-[#0d5ca3] text-white transition-colors"
                                   >
                                     Confirmer Arrivée
                                   </button>
@@ -563,7 +565,7 @@ export default function Dashboard() {
                         required
                         value={newBooking.clientId}
                         onChange={(e) => setNewBooking({ ...newBooking, clientId: e.target.value })}
-                        className="p-2.5 bg-slate-950 border border-[#1b2538] rounded text-slate-200 focus:outline-none focus:border-amber-500"
+                        className="p-2.5 bg-slate-950 border border-[#1b2538] rounded text-slate-200 focus:outline-none focus:border-[#c5a059]"
                       >
                         <option value="">Sélectionner un client...</option>
                         {users.map((u) => (
@@ -578,7 +580,7 @@ export default function Dashboard() {
                         required
                         value={newBooking.roomId}
                         onChange={(e) => setNewBooking({ ...newBooking, roomId: e.target.value })}
-                        className="p-2.5 bg-slate-950 border border-[#1b2538] rounded text-slate-200 focus:outline-none focus:border-amber-500"
+                        className="p-2.5 bg-slate-950 border border-[#1b2538] rounded text-slate-200 focus:outline-none focus:border-[#c5a059]"
                       >
                         <option value="">Sélectionner une chambre libre...</option>
                         {rooms.filter(r => r.status === "AVAILABLE").map((r) => (
@@ -597,7 +599,7 @@ export default function Dashboard() {
                           required
                           value={newBooking.checkIn}
                           onChange={(e) => setNewBooking({ ...newBooking, checkIn: e.target.value })}
-                          className="p-2.5 bg-slate-950 border border-[#1b2538] rounded text-slate-200 focus:outline-none focus:border-amber-500"
+                          className="p-2.5 bg-slate-950 border border-[#1b2538] rounded text-slate-200 focus:outline-none focus:border-[#c5a059]"
                         />
                       </div>
 
@@ -608,16 +610,16 @@ export default function Dashboard() {
                           required
                           value={newBooking.checkOut}
                           onChange={(e) => setNewBooking({ ...newBooking, checkOut: e.target.value })}
-                          className="p-2.5 bg-slate-950 border border-[#1b2538] rounded text-slate-200 focus:outline-none focus:border-amber-500"
+                          className="p-2.5 bg-slate-950 border border-[#1b2538] rounded text-slate-200 focus:outline-none focus:border-[#c5a059]"
                         />
                       </div>
                     </div>
 
                     <button 
                       type="submit"
-                      className="mt-2 py-3 rounded bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold tracking-wider uppercase transition-colors"
+                      className="mt-2 py-3 rounded bg-[#c5a059] hover:bg-[#b08b45] text-slate-950 font-bold tracking-wider uppercase transition-colors"
                     >
-                      Enregistrer la Réservation
+                      Enregistrer le Séjour
                     </button>
                   </form>
                 </div>
@@ -667,7 +669,7 @@ export default function Dashboard() {
 
                           <div className="pt-3 border-t border-[#1b2538] flex items-center justify-between">
                             <span className={`text-[10px] font-bold uppercase tracking-wider ${
-                              isPending ? 'text-amber-500 animate-pulse' : 'text-emerald-500'
+                              isPending ? 'text-[#c5a059] animate-pulse' : 'text-emerald-500'
                             }`}>
                               {isPending ? "En Attente" : "Exécuté"}
                             </span>
@@ -675,9 +677,9 @@ export default function Dashboard() {
                             {isPending && (
                               <button 
                                 onClick={() => handleConciergeComplete(req.id)}
-                                className="px-2.5 py-1 rounded text-[10px] font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 transition-colors"
+                                className="px-2.5 py-1 rounded text-[10px] font-bold bg-[#c5a059] hover:bg-[#b08b45] text-slate-950 transition-colors"
                               >
-                                Marquer comme fait
+                                Résoudre
                               </button>
                             )}
                           </div>
@@ -742,8 +744,8 @@ export default function Dashboard() {
       {kycResId && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="w-full max-w-sm rounded-xl bg-[#0e131f] border border-[#1b2538] p-6 shadow-2xl animate-scaleIn">
-            <h3 className="text-base font-bold text-white font-serif mb-2">Simulateur KYC (ARTCI)</h3>
-            <p className="text-xs text-slate-400 mb-4">Conformément à la réglementation ivoirienne, enregistrez la pièce d'identité du client pour activer la clé de chambre.</p>
+            <h3 className="text-base font-bold text-white font-serif mb-2">Enregistrement CNI / Passeport</h3>
+            <p className="text-xs text-slate-400 mb-4">Conformément à la réglementation ivoirienne (ARTCI), enregistrez la pièce d'identité du client pour activer la clé de chambre.</p>
 
             <form onSubmit={handleKycSubmit} className="flex flex-col gap-4 text-xs font-semibold">
               <div className="flex flex-col gap-1.5">
@@ -751,7 +753,7 @@ export default function Dashboard() {
                 <select 
                   value={kycForm.idType}
                   onChange={(e) => setKycForm({ ...kycForm, idType: e.target.value })}
-                  className="p-2.5 bg-slate-950 border border-[#1b2538] rounded text-slate-200 focus:outline-none focus:border-amber-500"
+                  className="p-2.5 bg-slate-950 border border-[#1b2538] rounded text-slate-200 focus:outline-none focus:border-[#c5a059]"
                 >
                   <option value="CNI">CNI (Côte d'Ivoire)</option>
                   <option value="Passport">Passeport</option>
@@ -767,7 +769,7 @@ export default function Dashboard() {
                   placeholder="Ex: C010823901"
                   value={kycForm.idNumber}
                   onChange={(e) => setKycForm({ ...kycForm, idNumber: e.target.value })}
-                  className="p-2.5 bg-slate-950 border border-[#1b2538] rounded text-slate-200 focus:outline-none focus:border-amber-500"
+                  className="p-2.5 bg-slate-950 border border-[#1b2538] rounded text-slate-200 focus:outline-none focus:border-[#c5a059]"
                 />
               </div>
 
@@ -777,7 +779,7 @@ export default function Dashboard() {
                   type="date"
                   value={kycForm.idExpiry}
                   onChange={(e) => setKycForm({ ...kycForm, idExpiry: e.target.value })}
-                  className="p-2.5 bg-slate-950 border border-[#1b2538] rounded text-slate-200 focus:outline-none focus:border-amber-500"
+                  className="p-2.5 bg-slate-950 border border-[#1b2538] rounded text-slate-200 focus:outline-none focus:border-[#c5a059]"
                 />
               </div>
 
@@ -791,9 +793,9 @@ export default function Dashboard() {
                 </button>
                 <button 
                   type="submit"
-                  className="flex-1 py-2 rounded bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold uppercase transition-colors"
+                  className="flex-1 py-2 rounded bg-[#c5a059] hover:bg-[#b08b45] text-slate-950 font-bold uppercase transition-colors"
                 >
-                  Enregistrer
+                  Valider
                 </button>
               </div>
             </form>
