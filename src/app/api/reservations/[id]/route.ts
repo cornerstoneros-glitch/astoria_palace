@@ -175,6 +175,46 @@ export async function PATCH(
       },
     });
 
+    // Sync transaction in the ledger
+    try {
+      const existingTx = await prisma.transaction.findFirst({
+        where: {
+          description: {
+            contains: `[ID: ${id}]`,
+          },
+        },
+      });
+
+      const finalPrice = updatedRes.totalPrice;
+      const isPaid = updatedRes.status === "CONFIRMED" || updatedRes.status === "COMPLETED";
+      const isCancelled = updatedRes.status === "CANCELLED";
+
+      if (existingTx) {
+        await prisma.transaction.update({
+          where: { id: existingTx.id },
+          data: {
+            amount: finalPrice,
+            type: isPaid ? "PAYMENT" : "INVOICE",
+            status: isCancelled ? "CANCELLED" : (isPaid ? "PAID" : "PENDING"),
+            description: `${isPaid ? 'Paiement' : (isCancelled ? 'Facture Annulée' : 'Facture')} Réservation Chambre ${updatedRes.room.number} (${updatedRes.room.roomType.name}) - Client: ${updatedRes.client.name || updatedRes.client.email} [ID: ${updatedRes.id}]`,
+          },
+        });
+      } else {
+        await prisma.transaction.create({
+          data: {
+            amount: finalPrice,
+            type: isPaid ? "PAYMENT" : "INVOICE",
+            status: isCancelled ? "CANCELLED" : (isPaid ? "PAID" : "PENDING"),
+            description: `${isPaid ? 'Paiement' : (isCancelled ? 'Facture Annulée' : 'Facture')} Réservation Chambre ${updatedRes.room.number} (${updatedRes.room.roomType.name}) - Client: ${updatedRes.client.name || updatedRes.client.email} [ID: ${updatedRes.id}]`,
+            userId: updatedRes.clientId,
+            category: "RESERVATION",
+          },
+        });
+      }
+    } catch (txError) {
+      console.error("Failed to sync reservation transaction:", txError);
+    }
+
     return NextResponse.json({ status: "success", data: updatedRes });
   } catch (error: any) {
     console.error("PATCH /api/reservations/[id] error:", error);

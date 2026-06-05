@@ -152,6 +152,19 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    // 6. Log transaction in ledger
+    const isPaid = reservation.status === "CONFIRMED" || reservation.status === "COMPLETED";
+    await prisma.transaction.create({
+      data: {
+        amount: totalPrice,
+        type: isPaid ? "PAYMENT" : "INVOICE",
+        status: isPaid ? "PAID" : "PENDING",
+        description: `${isPaid ? 'Paiement' : 'Facture'} Réservation Chambre ${reservation.room.number} (${reservation.room.roomType.name}) - Client: ${reservation.client.name || reservation.client.email} [ID: ${reservation.id}]`,
+        userId: clientId,
+        category: "RESERVATION",
+      },
+    });
+
     return NextResponse.json({ status: "success", data: reservation }, { status: 201 });
   } catch (error: any) {
     console.error("POST /api/reservations error:", error);

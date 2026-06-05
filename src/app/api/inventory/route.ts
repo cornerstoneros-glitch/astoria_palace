@@ -93,6 +93,21 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    // Log initial stock purchase as an expense transaction
+    const initialQty = parseFloat(quantity);
+    if (initialQty > 0) {
+      const estimatedCost = initialQty * 2500; // estimated unit cost of 2500 FCFA
+      await prisma.transaction.create({
+        data: {
+          amount: -estimatedCost,
+          type: "EXPENSE",
+          status: "PAID",
+          description: `Achat initial stock : +${initialQty} ${unit} de "${name}"`,
+          category: "RESTOCK",
+        },
+      });
+    }
+
     return NextResponse.json({ status: "success", data: item }, { status: 201 });
   } catch (error: any) {
     console.error("POST /api/inventory error:", error);

@@ -33,6 +33,23 @@ export async function PATCH(
       data,
     });
 
+    // If stock increased, log a restock expense transaction
+    if (quantity !== undefined) {
+      const diff = parseFloat(quantity) - itemExists.quantity;
+      if (diff > 0) {
+        const estimatedCost = diff * 2500; // estimated unit cost of 2500 FCFA
+        await prisma.transaction.create({
+          data: {
+            amount: -estimatedCost,
+            type: "EXPENSE",
+            status: "PAID",
+            description: `Réapprovisionnement stock : +${diff} ${updatedItem.unit} de "${updatedItem.name}"`,
+            category: "RESTOCK",
+          },
+        });
+      }
+    }
+
     return NextResponse.json({ status: "success", data: updatedItem });
   } catch (error: any) {
     console.error("PATCH /api/inventory/[id] error:", error);

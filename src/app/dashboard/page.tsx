@@ -7,6 +7,7 @@ import HousekeepingPanel from "./components/HousekeepingPanel";
 import ConciergePanel from "./components/ConciergePanel";
 import CrmPanel from "./components/CrmPanel";
 import NightAuditPanel from "./components/NightAuditPanel";
+import AccountingPanel from "./components/AccountingPanel";
 
 export default function Dashboard() {
   // Database datasets
@@ -1428,112 +1429,7 @@ export default function Dashboard() {
 
             {/* TAB CONTENT: ACCOUNTING */}
             {activeTab === "accounting" && (
-              <div className="flex flex-col gap-6 animate-fadeIn">
-                <div>
-                  <h2 className="text-xl font-bold font-serif text-slate-900">Livre Comptable & Trésorerie</h2>
-                  <p className="text-xs text-slate-550">Suivi des encaissements d'exploitation et des dépenses de fonctionnement.</p>
-                </div>
-
-                <div className="grid lg:grid-cols-3 gap-8">
-                  {/* Accounting Ledger Table */}
-                  <div className="lg:col-span-2 flex flex-col gap-4">
-                    <h3 className="text-base font-bold text-slate-900 font-serif">Grand Livre des Écritures</h3>
-                    
-                    <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
-                      <table className="w-full text-left text-xs">
-                        <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider">
-                          <tr>
-                            <th className="px-5 py-3">Date</th>
-                            <th className="px-5 py-3">Description</th>
-                            <th className="px-5 py-3 text-center">Catégorie</th>
-                            <th className="px-5 py-3 text-right">Montant</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-200 font-semibold">
-                          {transactions.length === 0 ? (
-                            <tr>
-                              <td colSpan={4} className="px-5 py-6 text-center text-slate-400">Aucun mouvement comptable.</td>
-                            </tr>
-                          ) : (
-                            transactions.map((t) => {
-                              const amountFormatted = t.amount.toLocaleString("fr-FR");
-                              const dateFormatted = new Date(t.createdAt).toLocaleDateString("fr-FR");
-                              const isPositive = t.amount > 0;
-
-                              return (
-                                <tr key={t.id} className="hover:bg-slate-50/50">
-                                  <td className="px-5 py-3 text-slate-500">{dateFormatted}</td>
-                                  <td className="px-5 py-3 text-slate-900">{t.description}</td>
-                                  <td className="px-5 py-3 text-center">
-                                    <span className="px-2 py-0.5 rounded text-[9px] font-bold bg-slate-100 border border-slate-200 text-slate-700">
-                                      {t.category}
-                                    </span>
-                                  </td>
-                                  <td className={`px-5 py-3 text-right font-serif font-extrabold ${isPositive ? 'text-emerald-600' : 'text-rose-600'}`}>
-                                    {isPositive ? `+ ${amountFormatted}` : `${amountFormatted}`} F
-                                  </td>
-                                </tr>
-                              );
-                            })
-                          )}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-
-                  {/* Saisie de Dépenses Form */}
-                  <div>
-                    <h3 className="text-base font-bold text-slate-900 font-serif mb-4">Saisie de Dépense Fausse/Réelle</h3>
-                    <form onSubmit={handleCreateExpense} className="p-4 rounded-xl bg-white border border-slate-200 shadow-sm flex flex-col gap-3.5 text-xs font-semibold">
-                      {expenseError && <div className="p-2 rounded bg-rose-50 border border-rose-200 text-rose-700">{expenseError}</div>}
-                      {expenseSuccess && <div className="p-2 rounded bg-emerald-50 border border-emerald-200 text-emerald-700">{expenseSuccess}</div>}
-
-                      <div className="flex flex-col gap-1">
-                        <label className="text-slate-655">Description de la dépense</label>
-                        <input 
-                          type="text"
-                          required
-                          placeholder="Ex: Facture d'eau SODECI Yopougon"
-                          value={newExpenseForm.description}
-                          onChange={(e) => setNewExpenseForm({ ...newExpenseForm, description: e.target.value })}
-                          className="p-2 bg-slate-50 border border-slate-200 rounded text-slate-800"
-                        />
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-2">
-                        <div className="flex flex-col gap-1">
-                          <label className="text-slate-655">Catégorie</label>
-                          <select 
-                            value={newExpenseForm.category}
-                            onChange={(e) => setNewExpenseForm({ ...newExpenseForm, category: e.target.value })}
-                            className="p-2 bg-slate-50 border border-slate-200 rounded text-slate-800"
-                          >
-                            <option value="SALARY">Salaires RH</option>
-                            <option value="RESTOCK">Achat Stocks</option>
-                            <option value="UTILITIES">Électricité / Eau</option>
-                            <option value="GENERAL">Frais Généraux</option>
-                          </select>
-                        </div>
-                        <div className="flex flex-col gap-1">
-                          <label className="text-slate-655">Montant (FCFA)</label>
-                          <input 
-                            type="number"
-                            required
-                            placeholder="Ex: 85000"
-                            value={newExpenseForm.amount}
-                            onChange={(e) => setNewExpenseForm({ ...newExpenseForm, amount: e.target.value })}
-                            className="p-2 bg-slate-50 border border-slate-200 rounded text-slate-800"
-                          />
-                        </div>
-                      </div>
-
-                      <button type="submit" className="py-2.5 rounded bg-gradient-to-r from-[#c5a059] to-[#b08b45] text-slate-950 font-bold uppercase transition-all shadow-sm">
-                        Écrire au Livre
-                      </button>
-                    </form>
-                  </div>
-                </div>
-              </div>
+              <AccountingPanel transactions={transactions} onRefresh={fetchData} />
             )}
 
             {/* TAB CONTENT: INVENTORY */}
