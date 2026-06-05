@@ -1,10 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { verifyAccess } from "@/lib/auth";
 
 // GET /api/inventory - List stock inventory
 export async function GET(request: NextRequest) {
   try {
+    const { authorized } = await verifyAccess(request, ["ADMIN", "STAFF"]);
+    if (!authorized) {
+      return NextResponse.json({ status: "error", message: "Non autorisé" }, { status: 401 });
+    }
+
     const { searchParams } = new URL(request.url);
+
     const category = searchParams.get("category");
     const siteId = searchParams.get("siteId");
     const lowStock = searchParams.get("lowStock") === "true";
@@ -41,8 +48,14 @@ export async function GET(request: NextRequest) {
 // POST /api/inventory - Create or add an inventory item
 export async function POST(request: NextRequest) {
   try {
+    const { authorized } = await verifyAccess(request, ["ADMIN", "STAFF"]);
+    if (!authorized) {
+      return NextResponse.json({ status: "error", message: "Non autorisé" }, { status: 401 });
+    }
+
     const body = await request.json();
     const { name, category, quantity, unit, minThreshold, siteId } = body;
+
 
     if (!name || !category || quantity === undefined || !unit || !siteId) {
       return NextResponse.json(

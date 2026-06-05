@@ -1,9 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { verifyAccess } from "@/lib/auth";
 
 // GET /api/hr - Retrieve all staff details
 export async function GET(request: NextRequest) {
   try {
+    const { authorized } = await verifyAccess(request, ["ADMIN", "STAFF"]);
+    if (!authorized) {
+      return NextResponse.json({ status: "error", message: "Non autorisé" }, { status: 401 });
+    }
+
     const staff = await prisma.staff.findMany({
       include: {
         user: {
@@ -33,6 +39,11 @@ export async function GET(request: NextRequest) {
 // POST /api/hr - Create new staff member
 export async function POST(request: NextRequest) {
   try {
+    const { authorized } = await verifyAccess(request, ["ADMIN"]);
+    if (!authorized) {
+      return NextResponse.json({ status: "error", message: "Non autorisé" }, { status: 401 });
+    }
+
     const body = await request.json();
     const { name, email, position, salary, contractType, shift, siteId } = body;
 

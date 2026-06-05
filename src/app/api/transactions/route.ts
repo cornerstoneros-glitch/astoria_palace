@@ -1,14 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { verifyAccess } from "@/lib/auth";
 
 // GET /api/transactions - Retrieve financial transactions
 export async function GET(request: NextRequest) {
   try {
+    const { authorized } = await verifyAccess(request, ["ADMIN", "STAFF"]);
+    if (!authorized) {
+      return NextResponse.json({ status: "error", message: "Non autorisé" }, { status: 401 });
+    }
+
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get("userId");
     const type = searchParams.get("type");
     const status = searchParams.get("status");
     const category = searchParams.get("category");
+
 
     const where: any = {};
     if (userId) where.userId = userId;
@@ -45,8 +52,14 @@ export async function GET(request: NextRequest) {
 // POST /api/transactions - Log a new transaction (invoice, payment, refund, expense)
 export async function POST(request: NextRequest) {
   try {
+    const { authorized } = await verifyAccess(request, ["ADMIN", "STAFF"]);
+    if (!authorized) {
+      return NextResponse.json({ status: "error", message: "Non autorisé" }, { status: 401 });
+    }
+
     const body = await request.json();
     const { amount, type, status, description, userId, category } = body;
+
 
     if (amount === undefined || !type) {
       return NextResponse.json(

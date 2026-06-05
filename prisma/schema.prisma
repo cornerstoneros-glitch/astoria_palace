@@ -262,3 +262,30 @@ model SystemSetting {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
+model PromoOffer {
+  id          String   @id @default(cuid())
+  title       String   // ex: "Escapade Romantique Week-end"
+  description String
+  discountPct Float?   // Percentage e.g. 15.0
+  promoCode   String?  // Code e.g. "ASTORIA15"
+  image       String?  // e.g. "piscine2.jpg"
+  startDate   DateTime
+  endDate     DateTime
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model HotelEvent {
+  id          String   @id @default(cuid())
+  title       String   // ex: "Soirée Grillade & Jazz au Lagon"
+  description String
+  eventDate   DateTime
+  price       Float    @default(0) // Entry ticket price
+  image       String?  // e.g. "bar2.jpg"
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+

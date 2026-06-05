@@ -15,14 +15,17 @@ export default function Dashboard() {
   const [hallBookings, setHallBookings] = useState<any[]>([]);
   const [transactions, setTransactions] = useState<any[]>([]);
   const [dishes, setDishes] = useState<any[]>([]);
+  const [promotions, setPromotions] = useState<any[]>([]);
+  const [events, setEvents] = useState<any[]>([]);
   
   const [roomTypes, setRoomTypes] = useState<any[]>([]);
   const [sites, setSites] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
   const [settings, setSettings] = useState<any>({});
   
-  // Tab Navigation (rooms, hr, accounting, inventory, restaurant, halls)
+  // Tab Navigation (rooms, hr, accounting, inventory, restaurant, halls, marketing)
   const [activeTab, setActiveTab] = useState<string>("rooms");
+
 
   // Load States
   const [loading, setLoading] = useState<boolean>(true);
@@ -101,8 +104,43 @@ export default function Dashboard() {
   const [hallSuccess, setHallSuccess] = useState<string | null>(null);
   const [hallError, setHallError] = useState<string | null>(null);
 
+  // 8. User Management Form (RBAC)
+  const [newUserForm, setNewUserForm] = useState({
+    name: "",
+    email: "",
+    password: "",
+    role: "CLIENT",
+  });
+  const [userSuccess, setUserSuccess] = useState<string | null>(null);
+  const [userError, setUserError] = useState<string | null>(null);
+
+  // 9. Promo Offer Form
+  const [newPromoForm, setNewPromoForm] = useState({
+    title: "",
+    description: "",
+    discountPct: "15",
+    promoCode: "ASTORIA15",
+    image: "suite2.jpg",
+    startDate: "",
+    endDate: "",
+  });
+  const [promoSuccess, setPromoSuccess] = useState<string | null>(null);
+  const [promoError, setPromoError] = useState<string | null>(null);
+
+  // 10. Hotel Event Form
+  const [newEventForm, setNewEventForm] = useState({
+    title: "",
+    description: "",
+    eventDate: "",
+    price: "15000",
+    image: "bar2.jpg",
+  });
+  const [eventSuccess, setEventSuccess] = useState<string | null>(null);
+  const [eventError, setEventError] = useState<string | null>(null);
+
   // Fetch all initial data
   const fetchData = async () => {
+
     try {
       setLoading(true);
       setError(null);
@@ -120,6 +158,9 @@ export default function Dashboard() {
         hallBookingsRes,
         transactionsRes,
         dishesRes,
+        usersRes,
+        promosRes,
+        eventsRes,
       ] = await Promise.all([
         fetch("/api/rooms"),
         fetch("/api/reservations"),
@@ -133,6 +174,9 @@ export default function Dashboard() {
         fetch("/api/halls/bookings"),
         fetch("/api/transactions"),
         fetch("/api/restaurant/dishes"),
+        fetch("/api/users"),
+        fetch("/api/promotions"),
+        fetch("/api/events"),
       ]);
 
       const roomsJson = await roomsRes.json();
@@ -147,6 +191,9 @@ export default function Dashboard() {
       const hallBookingsJson = await hallBookingsRes.json();
       const transactionsJson = await transactionsRes.json();
       const dishesJson = await dishesRes.json();
+      const usersJson = await usersRes.json();
+      const promosJson = await promosRes.json();
+      const eventsJson = await eventsRes.json();
 
       if (roomsJson.status === "success") setRooms(roomsJson.data);
       if (resJson.status === "success") setReservations(resJson.data);
@@ -159,15 +206,20 @@ export default function Dashboard() {
       if (hallBookingsJson.status === "success") setHallBookings(hallBookingsJson.data);
       if (transactionsJson.status === "success") setTransactions(transactionsJson.data);
       if (dishesJson.status === "success") setDishes(dishesJson.data);
+      if (usersJson.status === "success") setUsers(usersJson.data);
+      if (promosJson.status === "success") setPromotions(promosJson.data);
+      if (eventsJson.status === "success") setEvents(eventsJson.data);
 
       if (testJson.status === "success") {
         setRoomTypes(testJson.data.roomTypes || []);
         setSites(testJson.data.sites || []);
-        setUsers([
-          { id: "client-id-1", name: "DIBONA ROGER TRAORE", email: "roger.traore@gmail.com" },
-          { id: "client-id-2", name: "KOUAME PATRICE YAO", email: "patrice.yao@yahoo.fr" },
-          { id: "client-id-3", name: "AMANI KOFFI SERGE", email: "serge.amani@ci-news.com" },
-        ]);
+        if (usersJson.status !== "success" || !usersJson.data.length) {
+          setUsers([
+            { id: "client-id-1", name: "DIBONA ROGER TRAORE", email: "roger.traore@gmail.com", role: "CLIENT" },
+            { id: "client-id-2", name: "KOUAME PATRICE YAO", email: "patrice.yao@yahoo.fr", role: "CLIENT" },
+            { id: "client-id-3", name: "AMANI KOFFI SERGE", email: "serge.amani@ci-news.com", role: "CLIENT" },
+          ]);
+        }
       }
     } catch (err: any) {
       console.error(err);
@@ -176,6 +228,7 @@ export default function Dashboard() {
       setLoading(false);
     }
   };
+
 
   useEffect(() => {
     fetchData();
@@ -515,8 +568,171 @@ export default function Dashboard() {
     }
   };
 
+  // User Management Actions (RBAC)
+  const handleCreateUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setUserError(null);
+    setUserSuccess(null);
+
+    try {
+      const response = await fetch("/api/users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newUserForm),
+      });
+      const data = await response.json();
+      if (data.status === "success") {
+        setUserSuccess("Nouvel utilisateur enregistré avec succès !");
+        setNewUserForm({ name: "", email: "", password: "", role: "CLIENT" });
+        fetchData();
+      } else {
+        setUserError(data.message || "Erreur de création du compte.");
+      }
+    } catch (err) {
+      setUserError("Erreur serveur lors de la création.");
+    }
+  };
+
+  const handleUserRoleChange = async (userId: string, role: string) => {
+    try {
+      await fetch(`/api/users/${userId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ role }),
+      });
+      fetchData();
+    } catch (err) {
+      console.error("Failed to update user role", err);
+    }
+  };
+
+  const handleUserDelete = async (userId: string) => {
+    if (!confirm("Voulez-vous vraiment supprimer cet utilisateur ? Cette action supprimera également ses profils et préférences liés.")) {
+      return;
+    }
+    try {
+      await fetch(`/api/users/${userId}`, {
+        method: "DELETE",
+      });
+      fetchData();
+    } catch (err) {
+      console.error("Failed to delete user", err);
+    }
+  };
+
+  // Marketing & Promotions Actions
+  const handleCreatePromo = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPromoError(null);
+    setPromoSuccess(null);
+
+    try {
+      const response = await fetch("/api/promotions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newPromoForm),
+      });
+      const data = await response.json();
+      if (data.status === "success") {
+        setPromoSuccess("Offre promotionnelle créée avec succès !");
+        setNewPromoForm({
+          title: "",
+          description: "",
+          discountPct: "15",
+          promoCode: "ASTORIA15",
+          image: "suite2.jpg",
+          startDate: "",
+          endDate: "",
+        });
+        fetchData();
+      } else {
+        setPromoError(data.message || "Erreur de création de la promotion.");
+      }
+    } catch (err) {
+      setPromoError("Erreur serveur lors de la création.");
+    }
+  };
+
+  const handlePromoToggleActive = async (promoId: string, currentActive: boolean) => {
+    try {
+      await fetch(`/api/promotions/${promoId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isActive: !currentActive }),
+      });
+      fetchData();
+    } catch (err) {
+      console.error("Failed to toggle promotion status", err);
+    }
+  };
+
+  const handlePromoDelete = async (promoId: string) => {
+    if (!confirm("Voulez-vous vraiment supprimer cette promotion ?")) return;
+    try {
+      await fetch(`/api/promotions/${promoId}`, { method: "DELETE" });
+      fetchData();
+    } catch (err) {
+      console.error("Failed to delete promotion", err);
+    }
+  };
+
+  const handleCreateEvent = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setEventError(null);
+    setEventSuccess(null);
+
+    try {
+      const response = await fetch("/api/events", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newEventForm),
+      });
+      const data = await response.json();
+      if (data.status === "success") {
+        setEventSuccess("Événement créé avec succès !");
+        setNewEventForm({
+          title: "",
+          description: "",
+          eventDate: "",
+          price: "15000",
+          image: "bar2.jpg",
+        });
+        fetchData();
+      } else {
+        setEventError(data.message || "Erreur de création de l'événement.");
+      }
+    } catch (err) {
+      setEventError("Erreur serveur lors de la création.");
+    }
+  };
+
+  const handleEventToggleActive = async (eventId: string, currentActive: boolean) => {
+    try {
+      await fetch(`/api/events/${eventId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isActive: !currentActive }),
+      });
+      fetchData();
+    } catch (err) {
+      console.error("Failed to toggle event status", err);
+    }
+  };
+
+  const handleEventDelete = async (eventId: string) => {
+    if (!confirm("Voulez-vous vraiment supprimer cet événement ?")) return;
+    try {
+      await fetch(`/api/events/${eventId}`, { method: "DELETE" });
+      fetchData();
+    } catch (err) {
+      console.error("Failed to delete event", err);
+    }
+  };
+
   // Analytical stats
   const totalRooms = rooms.length;
+
+
   const occupiedCount = rooms.filter((r) => r.status === "OCCUPIED").length;
   const cleaningCount = rooms.filter((r) => r.status === "CLEANING").length;
   const maintenanceCount = rooms.filter((r) => r.status === "MAINTENANCE").length;
@@ -656,8 +872,34 @@ export default function Dashboard() {
                   <span className="text-base">🎪</span>
                   Réceptions / Salles
                 </button>
+
+                <button 
+                  onClick={() => setActiveTab("rbac")}
+                  className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-left transition-all ${
+                    activeTab === "rbac" 
+                      ? "bg-[#0d5ca3] text-white shadow-md shadow-blue-500/10" 
+                      : "text-slate-655 hover:bg-slate-200/50 hover:text-slate-900"
+                  }`}
+                >
+                  <span className="text-base">🔑</span>
+                  Accès & Rôles
+                </button>
+
+                <button 
+                  onClick={() => setActiveTab("marketing")}
+                  className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-left transition-all ${
+                    activeTab === "marketing" 
+                      ? "bg-[#0d5ca3] text-white shadow-md shadow-blue-500/10" 
+                      : "text-slate-655 hover:bg-slate-200/50 hover:text-slate-900"
+                  }`}
+                >
+                  <span className="text-base">📢</span>
+                  Marketing & Offres
+                </button>
               </nav>
             </div>
+
+
 
             <div className="mt-auto pt-6 border-t border-slate-200 flex flex-col gap-3">
               <div className="p-3.5 rounded-lg bg-white border border-slate-200 text-xs shadow-sm">
@@ -1682,7 +1924,458 @@ export default function Dashboard() {
               </div>
             )}
 
+            {/* TAB CONTENT: RBAC */}
+            {activeTab === "rbac" && (
+              <div className="flex flex-col gap-6 animate-fadeIn">
+                <div className="p-4 rounded-xl bg-amber-500/10 border border-[#c5a059]/30 text-xs text-slate-700 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm">
+                  <div>
+                    <h3 className="font-bold text-[#b08b45] uppercase tracking-wide flex items-center gap-1.5 text-sm mb-1">
+                      <span>🔑</span> Contrôle d'Accès de Haute Intégrité (RBAC)
+                    </h3>
+                    <p className="font-semibold text-slate-600">
+                      Actuellement : <strong className="text-amber-800">DÉSACTIVÉ (AUTH_ENABLED = false)</strong>. Les APIs et les vues sont bypassées pour permettre l'exploration complète.
+                    </p>
+                  </div>
+                  <div className="px-3 py-1.5 rounded-full bg-amber-500/20 text-[#b08b45] font-black border border-[#c5a059]/40 text-[10px] tracking-wider uppercase whitespace-nowrap self-start md:self-auto">
+                    Mode Libre / Démo
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  {/* Directory table */}
+                  <div className="lg:col-span-2 p-6 rounded-xl bg-white border border-slate-200/80 shadow-sm space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-base font-serif font-bold text-slate-900">Registre des Utilisateurs & Rôles</h3>
+                      <span className="text-[10px] px-2 py-0.5 bg-slate-100 border border-slate-200 text-slate-500 font-bold rounded-full">
+                        {users.length} comptes enregistrés
+                      </span>
+                    </div>
+
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-xs text-left">
+                        <thead>
+                          <tr className="border-b border-slate-200 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                            <th className="pb-3">Utilisateur</th>
+                            <th className="pb-3">E-mail</th>
+                            <th className="pb-3">Niveau d'Accès (Rôle)</th>
+                            <th className="pb-3 text-right">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100 font-medium">
+                          {users.map((user) => (
+                            <tr key={user.id} className="hover:bg-slate-50/50">
+                              <td className="py-3 font-bold text-slate-900">{user.name || "Sans nom"}</td>
+                              <td className="py-3 text-slate-600">{user.email}</td>
+                              <td className="py-3">
+                                <select
+                                  value={user.role}
+                                  onChange={(e) => handleUserRoleChange(user.id, e.target.value)}
+                                  className="px-2 py-1 rounded bg-slate-50 border border-slate-200 text-[10px] font-bold text-slate-700 focus:outline-none focus:border-[#c5a059]"
+                                >
+                                  <option value="CLIENT">CLIENT (Visiteur)</option>
+                                  <option value="STAFF">STAFF (Employé)</option>
+                                  <option value="ADMIN">ADMIN (Directeur)</option>
+                                </select>
+                              </td>
+                              <td className="py-3 text-right">
+                                <button
+                                  onClick={() => handleUserDelete(user.id)}
+                                  className="text-rose-600 hover:text-rose-800 transition-colors text-[10px] font-bold uppercase"
+                                >
+                                  Supprimer
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  {/* Add User form card */}
+                  <div className="p-6 rounded-xl bg-white border border-slate-200/80 shadow-sm space-y-4 h-fit">
+                    <h3 className="text-base font-serif font-bold text-slate-900">Créer un Nouvel Accès</h3>
+                    
+                    <form onSubmit={handleCreateUser} className="space-y-3.5 text-xs font-semibold">
+                      <div className="flex flex-col gap-1">
+                        <label className="text-slate-500 font-bold uppercase tracking-wider text-[9px]">Nom Complet</label>
+                        <input
+                          type="text"
+                          required
+                          placeholder="Ex: SERGE ALAIN KOFFI"
+                          value={newUserForm.name}
+                          onChange={(e) => setNewUserForm({ ...newUserForm, name: e.target.value })}
+                          className="p-2.5 bg-slate-50 border border-slate-200 rounded text-slate-800 focus:outline-none focus:border-[#0d5ca3]"
+                        />
+                      </div>
+
+                      <div className="flex flex-col gap-1">
+                        <label className="text-slate-500 font-bold uppercase tracking-wider text-[9px]">Adresse E-mail</label>
+                        <input
+                          type="email"
+                          required
+                          placeholder="Ex: serge.koffi@astoriapalace.ci"
+                          value={newUserForm.email}
+                          onChange={(e) => setNewUserForm({ ...newUserForm, email: e.target.value })}
+                          className="p-2.5 bg-slate-50 border border-slate-200 rounded text-slate-800 focus:outline-none focus:border-[#0d5ca3]"
+                        />
+                      </div>
+
+                      <div className="flex flex-col gap-1">
+                        <label className="text-slate-500 font-bold uppercase tracking-wider text-[9px]">Mot de passe temporaire</label>
+                        <input
+                          type="password"
+                          required
+                          placeholder="••••••••"
+                          value={newUserForm.password}
+                          onChange={(e) => setNewUserForm({ ...newUserForm, password: e.target.value })}
+                          className="p-2.5 bg-slate-50 border border-slate-200 rounded text-slate-800 focus:outline-none focus:border-[#0d5ca3]"
+                        />
+                      </div>
+
+                      <div className="flex flex-col gap-1">
+                        <label className="text-slate-500 font-bold uppercase tracking-wider text-[9px]">Niveau d'Accès</label>
+                        <select
+                          value={newUserForm.role}
+                          onChange={(e) => setNewUserForm({ ...newUserForm, role: e.target.value })}
+                          className="p-2.5 bg-slate-50 border border-slate-200 rounded text-slate-800 focus:outline-none focus:border-[#0d5ca3]"
+                        >
+                          <option value="CLIENT">CLIENT (Accès réservations)</option>
+                          <option value="STAFF">STAFF (Gestion courante)</option>
+                          <option value="ADMIN">ADMIN (Directeur Général)</option>
+                        </select>
+                      </div>
+
+                      {userSuccess && (
+                        <p className="p-2 rounded bg-emerald-50 border border-emerald-200 text-[10px] text-emerald-700">{userSuccess}</p>
+                      )}
+                      {userError && (
+                        <p className="p-2 rounded bg-red-50 border border-red-200 text-[10px] text-red-650">{userError}</p>
+                      )}
+
+                      <button
+                        type="submit"
+                        className="w-full py-3 rounded bg-gradient-to-r from-[#0d5ca3] to-[#1e40af] text-white hover:brightness-110 transition-all font-bold uppercase text-[10px] tracking-wider shadow-sm"
+                      >
+                        Enregistrer l'Accès
+                      </button>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* TAB CONTENT: MARKETING */}
+            {activeTab === "marketing" && (
+              <div className="flex flex-col gap-6 animate-fadeIn">
+                
+                {/* Intro row */}
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-xl font-bold font-serif text-slate-900">Gestion des Offres & Événements</h2>
+                    <p className="text-xs text-slate-550 mt-1">Créez des promotions, distribuez des codes de réduction et planifiez les activités d'animation de l'hôtel.</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  
+                  {/* PROMOTIONS COLUMN */}
+                  <div className="space-y-6">
+                    {/* Add Promo Card */}
+                    <div className="p-6 rounded-xl bg-white border border-slate-200/80 shadow-sm space-y-4">
+                      <h3 className="text-base font-serif font-bold text-slate-900 flex items-center gap-2">
+                        <span>🎁</span> Créer une Offre Promotionnelle
+                      </h3>
+                      
+                      <form onSubmit={handleCreatePromo} className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs font-semibold">
+                        <div className="flex flex-col gap-1 sm:col-span-2">
+                          <label className="text-slate-500 font-bold uppercase tracking-wider text-[9px]">Titre de l'Offre</label>
+                          <input
+                            type="text"
+                            required
+                            placeholder="Ex: Escapade Saint-Valentin"
+                            value={newPromoForm.title}
+                            onChange={(e) => setNewPromoForm({ ...newPromoForm, title: e.target.value })}
+                            className="p-2.5 bg-slate-50 border border-slate-200 rounded text-slate-800 focus:outline-none focus:border-[#c5a059]"
+                          />
+                        </div>
+
+                        <div className="flex flex-col gap-1 sm:col-span-2">
+                          <label className="text-slate-500 font-bold uppercase tracking-wider text-[9px]">Description de la Promotion</label>
+                          <textarea
+                            required
+                            rows={2}
+                            placeholder="Décrivez les avantages de l'offre (ex: bouteille offerte, accès lagon, etc.)"
+                            value={newPromoForm.description}
+                            onChange={(e) => setNewPromoForm({ ...newPromoForm, description: e.target.value })}
+                            className="p-2.5 bg-slate-50 border border-slate-200 rounded text-slate-800 focus:outline-none focus:border-[#c5a059] resize-none"
+                          />
+                        </div>
+
+                        <div className="flex flex-col gap-1">
+                          <label className="text-slate-500 font-bold uppercase tracking-wider text-[9px]">Réduction (%)</label>
+                          <input
+                            type="number"
+                            placeholder="Ex: 15"
+                            value={newPromoForm.discountPct}
+                            onChange={(e) => setNewPromoForm({ ...newPromoForm, discountPct: e.target.value })}
+                            className="p-2.5 bg-slate-50 border border-slate-200 rounded text-slate-800 focus:outline-none focus:border-[#c5a059]"
+                          />
+                        </div>
+
+                        <div className="flex flex-col gap-1">
+                          <label className="text-slate-500 font-bold uppercase tracking-wider text-[9px]">Code Promo</label>
+                          <input
+                            type="text"
+                            placeholder="Ex: VALENTIN15"
+                            value={newPromoForm.promoCode}
+                            onChange={(e) => setNewPromoForm({ ...newPromoForm, promoCode: e.target.value })}
+                            className="p-2.5 bg-slate-50 border border-slate-200 rounded text-slate-800 focus:outline-none focus:border-[#c5a059]"
+                          />
+                        </div>
+
+                        <div className="flex flex-col gap-1">
+                          <label className="text-slate-500 font-bold uppercase tracking-wider text-[9px]">Date de Début</label>
+                          <input
+                            type="date"
+                            required
+                            value={newPromoForm.startDate}
+                            onChange={(e) => setNewPromoForm({ ...newPromoForm, startDate: e.target.value })}
+                            className="p-2.5 bg-slate-50 border border-slate-200 rounded text-slate-800 focus:outline-none"
+                          />
+                        </div>
+
+                        <div className="flex flex-col gap-1">
+                          <label className="text-slate-500 font-bold uppercase tracking-wider text-[9px]">Date de Fin</label>
+                          <input
+                            type="date"
+                            required
+                            value={newPromoForm.endDate}
+                            onChange={(e) => setNewPromoForm({ ...newPromoForm, endDate: e.target.value })}
+                            className="p-2.5 bg-slate-50 border border-slate-200 rounded text-slate-800 focus:outline-none"
+                          />
+                        </div>
+
+                        <div className="flex flex-col gap-1 sm:col-span-2">
+                          <label className="text-slate-500 font-bold uppercase tracking-wider text-[9px]">Illustration Visuelle</label>
+                          <select
+                            value={newPromoForm.image}
+                            onChange={(e) => setNewPromoForm({ ...newPromoForm, image: e.target.value })}
+                            className="p-2.5 bg-slate-50 border border-slate-200 rounded text-slate-800 focus:outline-none"
+                          >
+                            <option value="suite2.jpg">Suite Junior (Interieur)</option>
+                            <option value="piscine2.jpg">Piscine Lagon (Extérieur)</option>
+                            <option value="bar3.jpg">Bar Lounge (Cocktails)</option>
+                            <option value="jaccuzi.jpg">Espace Jacuzzi / Spa</option>
+                            <option value="large_vue.jpg">Grande Vue Panoramique</option>
+                          </select>
+                        </div>
+
+                        {promoSuccess && (
+                          <p className="p-2.5 rounded bg-emerald-50 border border-emerald-250 text-emerald-700 sm:col-span-2">{promoSuccess}</p>
+                        )}
+                        {promoError && (
+                          <p className="p-2.5 rounded bg-rose-50 border border-rose-255 text-rose-700 sm:col-span-2">{promoError}</p>
+                        )}
+
+                        <button
+                          type="submit"
+                          className="py-3 rounded bg-gradient-to-r from-[#c5a059] to-[#b08b45] text-slate-950 font-bold uppercase text-[10px] tracking-wider sm:col-span-2 hover:brightness-105 shadow-sm transition-all"
+                        >
+                          Publier la Promotion
+                        </button>
+                      </form>
+                    </div>
+
+                    {/* Promo List Card */}
+                    <div className="p-6 rounded-xl bg-white border border-slate-200/80 shadow-sm space-y-4">
+                      <h3 className="text-base font-serif font-bold text-slate-900">Promotions Actives ({promotions.length})</h3>
+                      
+                      <div className="divide-y divide-slate-100 max-h-96 overflow-y-auto pr-1">
+                        {promotions.length === 0 ? (
+                          <p className="text-xs text-slate-400 py-4 text-center">Aucune offre promotionnelle enregistrée.</p>
+                        ) : (
+                          promotions.map((promo) => (
+                            <div key={promo.id} className="py-4 flex items-center justify-between gap-4 text-xs font-medium">
+                              <div>
+                                <h4 className="font-bold text-slate-900 flex items-center gap-1.5">
+                                  {promo.title} 
+                                  <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase border ${
+                                    promo.isActive ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-50 text-slate-400 border-slate-200'
+                                  }`}>
+                                    {promo.isActive ? 'Actif' : 'Désactivé'}
+                                  </span>
+                                </h4>
+                                <p className="text-[10px] text-slate-500 mt-0.5">{promo.description.substring(0, 80)}...</p>
+                                <div className="flex gap-2 text-[10px] text-slate-450 mt-1 font-semibold">
+                                  {promo.promoCode && <span>Code: {promo.promoCode}</span>}
+                                  {promo.discountPct && <span>-{promo.discountPct}%</span>}
+                                  <span>Exp: {new Date(promo.endDate).toLocaleDateString("fr-FR")}</span>
+                                </div>
+                              </div>
+
+                              <div className="flex items-center gap-2">
+                                <button
+                                  onClick={() => handlePromoToggleActive(promo.id, promo.isActive)}
+                                  className="px-2 py-1 rounded border border-slate-200 bg-slate-50 hover:bg-slate-100 text-[10px] font-bold"
+                                >
+                                  {promo.isActive ? "Masquer" : "Afficher"}
+                                </button>
+                                <button
+                                  onClick={() => handlePromoDelete(promo.id)}
+                                  className="text-rose-600 hover:text-rose-800 text-[10px] font-bold"
+                                >
+                                  Effacer
+                                </button>
+                              </div>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* EVENTS COLUMN */}
+                  <div className="space-y-6">
+                    {/* Add Event Card */}
+                    <div className="p-6 rounded-xl bg-white border border-slate-200/80 shadow-sm space-y-4">
+                      <h3 className="text-base font-serif font-bold text-slate-900 flex items-center gap-2">
+                        <span>📅</span> Planifier un Événement Publique
+                      </h3>
+
+                      <form onSubmit={handleCreateEvent} className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs font-semibold">
+                        <div className="flex flex-col gap-1 sm:col-span-2">
+                          <label className="text-slate-500 font-bold uppercase tracking-wider text-[9px]">Nom de l'Événement</label>
+                          <input
+                            type="text"
+                            required
+                            placeholder="Ex: Réveillon Jazz & Gastronomie"
+                            value={newEventForm.title}
+                            onChange={(e) => setNewEventForm({ ...newEventForm, title: e.target.value })}
+                            className="p-2.5 bg-slate-50 border border-slate-200 rounded text-slate-800 focus:outline-none focus:border-[#0d5ca3]"
+                          />
+                        </div>
+
+                        <div className="flex flex-col gap-1 sm:col-span-2">
+                          <label className="text-slate-500 font-bold uppercase tracking-wider text-[9px]">Description</label>
+                          <textarea
+                            required
+                            rows={2}
+                            placeholder="Indiquez l'animation, le menu, les invités célèbres, etc."
+                            value={newEventForm.description}
+                            onChange={(e) => setNewEventForm({ ...newEventForm, description: e.target.value })}
+                            className="p-2.5 bg-slate-50 border border-slate-200 rounded text-slate-800 focus:outline-none focus:border-[#0d5ca3] resize-none"
+                          />
+                        </div>
+
+                        <div className="flex flex-col gap-1">
+                          <label className="text-slate-500 font-bold uppercase tracking-wider text-[9px]">Date & Heure de l'Événement</label>
+                          <input
+                            type="datetime-local"
+                            required
+                            value={newEventForm.eventDate}
+                            onChange={(e) => setNewEventForm({ ...newEventForm, eventDate: e.target.value })}
+                            className="p-2.5 bg-slate-50 border border-slate-200 rounded text-slate-800 focus:outline-none"
+                          />
+                        </div>
+
+                        <div className="flex flex-col gap-1">
+                          <label className="text-slate-500 font-bold uppercase tracking-wider text-[9px]">Prix du Ticket (FCFA)</label>
+                          <input
+                            type="number"
+                            placeholder="0 pour entrée libre"
+                            value={newEventForm.price}
+                            onChange={(e) => setNewEventForm({ ...newEventForm, price: e.target.value })}
+                            className="p-2.5 bg-slate-50 border border-slate-200 rounded text-slate-800 focus:outline-none focus:border-[#0d5ca3]"
+                          />
+                        </div>
+
+                        <div className="flex flex-col gap-1 sm:col-span-2">
+                          <label className="text-slate-500 font-bold uppercase tracking-wider text-[9px]">Image de Présentation</label>
+                          <select
+                            value={newEventForm.image}
+                            onChange={(e) => setNewEventForm({ ...newEventForm, image: e.target.value })}
+                            className="p-2.5 bg-slate-50 border border-slate-200 rounded text-slate-800 focus:outline-none"
+                          >
+                            <option value="bar2.jpg">Lounge Bar (Ambiance Jazz)</option>
+                            <option value="karaoke.jpg">Soirée Karaoké (Scène & Micro)</option>
+                            <option value="restaurent.jpg">Buffet Restaurant Terroir</option>
+                            <option value="Piscine.jpg">Piscine Lagon de Nuit</option>
+                            <option value="salle de reception2.jpg">Grande Salle Décorée</option>
+                          </select>
+                        </div>
+
+                        {eventSuccess && (
+                          <p className="p-2.5 rounded bg-emerald-50 border border-emerald-255 text-emerald-700 sm:col-span-2">{eventSuccess}</p>
+                        )}
+                        {eventError && (
+                          <p className="p-2.5 rounded bg-rose-50 border border-rose-255 text-rose-700 sm:col-span-2">{eventError}</p>
+                        )}
+
+                        <button
+                          type="submit"
+                          className="py-3 rounded bg-gradient-to-r from-[#0d5ca3] to-[#1e40af] text-white font-bold uppercase text-[10px] tracking-wider sm:col-span-2 hover:brightness-110 shadow-sm transition-all"
+                        >
+                          Planifier l'Événement
+                        </button>
+                      </form>
+                    </div>
+
+                    {/* Event List Card */}
+                    <div className="p-6 rounded-xl bg-white border border-slate-200/80 shadow-sm space-y-4">
+                      <h3 className="text-base font-serif font-bold text-slate-900">Événements Planifiés ({events.length})</h3>
+                      
+                      <div className="divide-y divide-slate-100 max-h-96 overflow-y-auto pr-1">
+                        {events.length === 0 ? (
+                          <p className="text-xs text-slate-400 py-4 text-center">Aucun événement enregistré.</p>
+                        ) : (
+                          events.map((evt) => (
+                            <div key={evt.id} className="py-4 flex items-center justify-between gap-4 text-xs font-medium">
+                              <div>
+                                <h4 className="font-bold text-slate-900 flex items-center gap-1.5">
+                                  {evt.title}
+                                  <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase border ${
+                                    evt.isActive ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-50 text-slate-400 border-slate-200'
+                                  }`}>
+                                    {evt.isActive ? 'Visible' : 'Masqué'}
+                                  </span>
+                                </h4>
+                                <p className="text-[10px] text-slate-500 mt-0.5">{evt.description.substring(0, 80)}...</p>
+                                <div className="flex gap-2 text-[10px] text-slate-450 mt-1 font-semibold">
+                                  <span>📅 {new Date(evt.eventDate).toLocaleString("fr-FR")}</span>
+                                  <span>Price: {evt.price > 0 ? `${evt.price.toLocaleString("fr-FR")} F` : "Gratuit"}</span>
+                                </div>
+                              </div>
+
+                              <div className="flex items-center gap-2">
+                                <button
+                                  onClick={() => handleEventToggleActive(evt.id, evt.isActive)}
+                                  className="px-2 py-1 rounded border border-slate-200 bg-slate-50 hover:bg-slate-100 text-[10px] font-bold"
+                                >
+                                  {evt.isActive ? "Masquer" : "Afficher"}
+                                </button>
+                                <button
+                                  onClick={() => handleEventDelete(evt.id)}
+                                  className="text-rose-600 hover:text-rose-800 text-[10px] font-bold"
+                                >
+                                  Effacer
+                                </button>
+                              </div>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+
+              </div>
+            )}
+
           </main>
+
+
         </div>
       )}
 

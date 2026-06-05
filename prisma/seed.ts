@@ -10,6 +10,8 @@ async function main() {
   console.log("Seeding started...");
 
   // 1. Clean existing database records
+  await prisma.promoOffer.deleteMany({});
+  await prisma.hotelEvent.deleteMany({});
   await prisma.systemSetting.deleteMany({});
   await prisma.dishComponent.deleteMany({});
   await prisma.dish.deleteMany({});
@@ -471,6 +473,73 @@ async function main() {
     ]
   });
   console.log("Accounting records and orders seeded.");
+
+  // 15. Create Promotional Offers
+  await prisma.promoOffer.createMany({
+    data: [
+      {
+        title: "Escapade Romantique",
+        description: "Offrez-vous un séjour inoubliable avec décoration de chambre personnalisée, cocktail de bienvenue et petit déjeuner inclus pour deux personnes.",
+        discountPct: 15,
+        promoCode: "ROMANCE15",
+        image: "suite2.jpg",
+        startDate: new Date(),
+        endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // +30 days
+        isActive: true,
+      },
+      {
+        title: "Offre Détente Lagon",
+        description: "Bénéficiez de 20% de réduction sur les Junior Suites avec accès illimité à l'espace lagon aquatique et au jacuzzi.",
+        discountPct: 20,
+        promoCode: "LAGON20",
+        image: "piscine2.jpg",
+        startDate: new Date(),
+        endDate: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000), // +15 days
+        isActive: true,
+      },
+      {
+        title: "Happy Hour au Pool Bar",
+        description: "Pour chaque cocktail signature acheté, le deuxième vous est offert tous les vendredis et samedis soirs à partir de 18h.",
+        discountPct: 50,
+        promoCode: "HAPPYBAR",
+        image: "bar3.jpg",
+        startDate: new Date(),
+        endDate: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000), // +60 days
+        isActive: true,
+      }
+    ]
+  });
+
+  // 16. Create Hotel Events
+  await prisma.hotelEvent.createMany({
+    data: [
+      {
+        title: "Soirée Grillade & Jazz au Lagon",
+        description: "Une ambiance feutrée portée par un saxophoniste jazz invité, autour d'un somptueux buffet de brochettes, langoustes grillées et cocktails tropicaux au bord de la piscine.",
+        eventDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // +7 days
+        price: 15000,
+        image: "bar2.jpg",
+        isActive: true,
+      },
+      {
+        title: "Karaoké & Bulles VIP",
+        description: "Libérez votre passion pour le chant dans le cadre élégant du Salon VIP Lagune, avec coupe de champagne de bienvenue offerte et prix pour les meilleures interprétations.",
+        eventDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), // +14 days
+        price: 20000,
+        image: "karaoke.jpg",
+        isActive: true,
+      },
+      {
+        title: "Grand Brunch du Terroir",
+        description: "Découvrez notre carte locale de prestige sous forme de buffet gastronomique à volonté : kédjénous mijotés, poissons d'eau douce braisés et alloco doré.",
+        eventDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000), // +2 days
+        price: 18000,
+        image: "restaurent.jpg",
+        isActive: true,
+      }
+    ]
+  });
+  console.log("Promotions and events seeded.");
 
   console.log("Seeding completed successfully.");
 }

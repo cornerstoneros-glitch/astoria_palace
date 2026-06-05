@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { verifyAccess } from "@/lib/auth";
 
 // PATCH /api/hr/[id] - Update staff details
 export async function PATCH(
@@ -7,7 +8,13 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { authorized } = await verifyAccess(request, ["ADMIN"]);
+    if (!authorized) {
+      return NextResponse.json({ status: "error", message: "Non autorisé" }, { status: 401 });
+    }
+
     const { id } = await params;
+
     const body = await request.json();
     const { position, salary, contractType, shift, status } = body;
 
@@ -60,11 +67,17 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { authorized } = await verifyAccess(request, ["ADMIN"]);
+    if (!authorized) {
+      return NextResponse.json({ status: "error", message: "Non autorisé" }, { status: 401 });
+    }
+
     const { id } = await params;
 
     const staffExists = await prisma.staff.findUnique({
       where: { id },
     });
+
 
     if (!staffExists) {
       return NextResponse.json(
