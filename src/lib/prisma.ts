@@ -3,19 +3,19 @@ import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
 
 const globalForPrisma = globalThis as unknown as { prisma: PrismaClient };
 
+function createPrismaClient() {
+  const dbUrl = process.env.DATABASE_URL || "file:./dev.db";
+  const adapter = new PrismaBetterSqlite3({ url: dbUrl });
+  return new PrismaClient({ adapter });
+}
+
 let prismaInstance: PrismaClient;
 
 if (process.env.NODE_ENV === "production") {
-  const adapter = new PrismaBetterSqlite3({
-    url: "file:./dev.db"
-  });
-  prismaInstance = new PrismaClient({ adapter });
+  prismaInstance = createPrismaClient();
 } else {
   if (!globalForPrisma.prisma) {
-    const adapter = new PrismaBetterSqlite3({
-      url: "file:./dev.db"
-    });
-    globalForPrisma.prisma = new PrismaClient({ adapter });
+    globalForPrisma.prisma = createPrismaClient();
   }
   prismaInstance = globalForPrisma.prisma;
 }
