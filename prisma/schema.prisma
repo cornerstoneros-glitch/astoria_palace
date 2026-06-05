@@ -1,0 +1,210 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Site {
+  id          String   @id @default(cuid())
+  name        String   // e.g., "Hôtel Astoria Palace"
+  location    String?  // e.g., "Yopougon, Abidjan"
+  description String?
+  rooms       Room[]
+  services    Service[]
+  staff       Staff[]
+  inventory   InventoryItem[]
+  dishes      Dish[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model RoomType {
+  id          String   @id @default(cuid())
+  name        String   // Standard, Supérieure, Junior Suite, Suite Exécutive, Suite Présidentielle
+  description String?
+  price       Float
+  capacity    Int
+  rooms       Room[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Room {
+  id          String   @id @default(cuid())
+  number      String
+  status      String   @default("AVAILABLE") // AVAILABLE, OCCUPIED, CLEANING, MAINTENANCE
+  roomType    RoomType @relation(fields: [roomTypeId], references: [id])
+  roomTypeId  String
+  site        Site     @relation(fields: [siteId], references: [id])
+  siteId      String
+  reservations Reservation[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Reservation {
+  id           String   @id @default(cuid())
+  checkIn      DateTime
+  checkOut     DateTime
+  status       String   @default("PENDING") // PENDING, CONFIRMED, CANCELLED, COMPLETED
+  checkInStatus String  @default("NOT_STARTED") // NOT_STARTED, KYC_SUBMITTED, READY_FOR_KEY, CHECKED_IN
+  totalPrice   Float
+  room         Room     @relation(fields: [roomId], references: [id])
+  roomId       String
+  client       User     @relation(fields: [clientId], references: [id])
+  clientId     String
+  kycData      KycData?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model KycData {
+  id             String      @id @default(cuid())
+  idType         String      // Passport, CNI, etc.
+  idNumber       String
+  idExpiry       DateTime?
+  idImage        String?     // URL or Path to uploaded image
+  reservation    Reservation @relation(fields: [reservationId], references: [id])
+  reservationId  String      @unique
+  createdAt      DateTime    @default(now())
+}
+
+model GuestPreferences {
+  id             String   @id @default(cuid())
+  pillowType     String?
+  beverages      String?  // Favorite drinks list
+  cleaningTime   String?  // Preferred time
+  dietaryNotes   String?
+  user           User     @relation(fields: [userId], references: [id])
+  userId         String   @unique
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String?
+  password     String
+  role         String   @default("CLIENT") // CLIENT, ADMIN, STAFF
+  reservations Reservation[]
+  staffProfile Staff?
+  loyalty      LoyaltyProgram?
+  preferences  GuestPreferences?
+  transactions Transaction[]
+  reviews      Review[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model LoyaltyProgram {
+  id        String   @id @default(cuid())
+  points    Int      @default(0)
+  tier      String   @default("STANDARD") // STANDARD, SILVER, GOLD, PLATINUM
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Transaction {
+  id          String   @id @default(cuid())
+  amount      Float
+  type        String   // INVOICE, PAYMENT, REFUND
+  status      String   @default("PENDING") // PENDING, PAID, CANCELLED
+  description String?
+  user        User     @relation(fields: [userId], references: [id])
+  userId      String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model ConciergeRequest {
+  id          String   @id @default(cuid())
+  type        String   // ROOM_SERVICE, MAINTENANCE, TOWELS, etc.
+  status      String   @default("PENDING") // PENDING, IN_PROGRESS, COMPLETED
+  description String?
+  roomNumber  String
+  site        String   // Hôtel Astoria Palace
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  rating    Int
+  comment   String?
+  category  String?  // Room, Food, Service
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Staff {
+  id        String   @id @default(cuid())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String   @unique
+  site      Site     @relation(fields: [siteId], references: [id])
+  siteId    String
+  position  String   // Receptionist, Housekeeping, Manager, Chef, Waiter, Barman
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Service {
+  id          String   @id @default(cuid())
+  name        String   // Restaurant, Pool, Spa, Bar, Event, etc.
+  description String?
+  price       Float?
+  site        Site     @relation(fields: [siteId], references: [id])
+  siteId      String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model InventoryItem {
+  id           String   @id @default(cuid())
+  name         String
+  category     String   // Food, Beverage, Housekeeping, Linen
+  quantity     Float
+  unit         String   // kg, unit, bottle, etc.
+  minThreshold Float    @default(5)
+  site         Site     @relation(fields: [siteId], references: [id])
+  siteId       String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Dish {
+  id          String          @id @default(cuid())
+  name        String
+  category    String          // Signature, Terroir, Tradition
+  description String?
+  price       Float?
+  image       String?         // Path to image
+  site        Site            @relation(fields: [siteId], references: [id])
+  siteId      String
+  isActive    Boolean         @default(true)
+  components  DishComponent[]
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+}
+
+model DishComponent {
+  id       String  @id @default(cuid())
+  name     String          // ex: "Attiéké", "Frites", "Riz", etc.
+  type     String          // PROTEIN, GARNISH, SAUCE, OPTION
+  optional Boolean @default(false)
+  dish     Dish    @relation(fields: [dishId], references: [id], onDelete: Cascade)
+  dishId   String
+}
+
+model SystemSetting {
+  key       String   @id
+  value     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
