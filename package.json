@@ -1,0 +1,12 @@
+{
+  "name": "astoria_palace_docx_generator",
+  "version": "1.0.0",
+  "description": "DOCX Generator for Astoria Palace",
+  "main": "generate_docx.js",
+  "scripts": {
+    "generate": "node generate_docx.js"
+  },
+  "dependencies": {
+    "docx": "^8.5.0"
+  }
+}
