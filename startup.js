@@ -2,22 +2,29 @@
  * startup.js — Script de démarrage pour environnements de production
  *
  * Ce script est exécuté AVANT next start.
+ * Compatible Prisma v7 (prisma.config.ts gère la connexion DB).
+ *
  * Il s'assure que :
  *   1. Les migrations Prisma sont appliquées (tables créées)
  *   2. La base de données est peuplée si elle est vide (seed)
  *   3. Next.js est lancé en mode production
  */
 
+// Charger les variables d'environnement depuis .env
+require("dotenv").config();
+
 const { execSync, spawn } = require("child_process");
-const path = require("path");
-const fs = require("fs");
 
 const rootDir = __dirname;
 
 function run(cmd, label) {
   console.log(`\n[startup] ▶ ${label}...`);
   try {
-    execSync(cmd, { stdio: "inherit", cwd: rootDir });
+    execSync(cmd, {
+      stdio: "inherit",
+      cwd: rootDir,
+      env: { ...process.env },
+    });
     console.log(`[startup] ✓ ${label} terminé.`);
   } catch (err) {
     console.error(`[startup] ✗ Échec: ${label}`);
@@ -27,11 +34,13 @@ function run(cmd, label) {
 }
 
 async function main() {
-  // 1. Appliquer les migrations (crée les tables si elles n'existent pas)
+  console.log("[startup] DATABASE_URL =", process.env.DATABASE_URL || "(non définie, utilisation du défaut)");
+
+  // 1. Appliquer les migrations Prisma v7
+  //    prisma migrate deploy lit automatiquement prisma.config.ts
   run("npx prisma migrate deploy", "Prisma migrate deploy");
 
-  // 2. Vérifier si la DB est vide (seed uniquement si nécessaire)
-  //    On vérifie en comptant les sites — si 0, on seed.
+  // 2. Vérifier si la DB est vide → seed conditionnel
   try {
     const { PrismaClient } = require("@prisma/client");
     const { PrismaBetterSqlite3 } = require("@prisma/adapter-better-sqlite3");
@@ -50,11 +59,11 @@ async function main() {
       console.log(`\n[startup] ℹ DB déjà peuplée (${siteCount} site(s)) — seed ignoré.`);
     }
   } catch (err) {
-    console.warn("[startup] ⚠ Impossible de vérifier le seed:", err.message);
-    // Ne pas bloquer le démarrage si la vérification échoue
+    console.warn("[startup] ⚠ Vérification seed ignorée:", err.message);
+    // Ne pas bloquer si la vérification échoue — l'app démarre quand même
   }
 
-  // 3. Lancer Next.js
+  // 3. Lancer Next.js production
   console.log("\n[startup] ▶ Démarrage de Next.js...\n");
   const next = spawn("npx", ["next", "start", "-p", process.env.PORT || "3000"], {
     stdio: "inherit",
