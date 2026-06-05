@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    const bookedRoomIds = conflictingReservations.map((r) => r.roomId);
+    const bookedRoomIds = conflictingReservations.map((r: { roomId: string }) => r.roomId);
 
     // 4. Compile statistics per Room Type
     const availabilityData = roomTypes.map((type) => {

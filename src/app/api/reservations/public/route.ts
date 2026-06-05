@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    const bookedRoomIds = conflictingReservations.map((r) => r.roomId);
+    const bookedRoomIds = conflictingReservations.map((r: { roomId: string }) => r.roomId);
 
     // 2. Select a room of the requested type that is NOT in the booked room list
     const availableRoom = await prisma.room.findFirst({
