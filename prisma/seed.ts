@@ -118,9 +118,47 @@ async function main() {
   const client6 = await prisma.user.create({ data: { email: "ibrahima.cisse@sgbci.ci", name: "IBRAHIMA CISSÉ", password: "client123", role: "CLIENT" } });
   const client7 = await prisma.user.create({ data: { email: "valerie.assi@un.org", name: "VALÉRIE ASSI", password: "client123", role: "CLIENT" } });
   const client8 = await prisma.user.create({ data: { email: "christophe.gnagne@gmail.com", name: "CHRISTOPHE GNAGNÉ", password: "client123", role: "CLIENT" } });
-  console.log("✓ Utilisateurs créés");
+  // Direction élargie
+  const dgaUser    = await prisma.user.create({ data: { email: "dga@astoriapalace.ci", name: "KOUASSI JEAN-MARC", password: "astoria2026", role: "ADMIN" } });
+  const dafUser    = await prisma.user.create({ data: { email: "comptabilite@astoriapalace.ci", name: "N'GUESSAN YVETTE", password: "astoria2026", role: "ADMIN" } });
+
+  // Staff — Front Office complémentaire
+  const nightAudit = await prisma.user.create({ data: { email: "reception3@astoriapalace.ci", name: "DOUMBIA ISSOUF", password: "astoria2026", role: "STAFF" } });
+  const conciergeUser = await prisma.user.create({ data: { email: "concierge@astoriapalace.ci", name: "BROU STÉPHANE", password: "astoria2026", role: "STAFF" } });
+
+  // Staff — Restauration & Cuisine
+  const sousChef   = await prisma.user.create({ data: { email: "souschef@astoriapalace.ci", name: "AKÉ PASCAL", password: "astoria2026", role: "STAFF" } });
+  const serveurUser = await prisma.user.create({ data: { email: "serveur@astoriapalace.ci", name: "COULIBALY DRISSA", password: "astoria2026", role: "STAFF" } });
+
+  // Staff — Housekeeping & Entretien
+  const gov2User   = await prisma.user.create({ data: { email: "gouvernante2@astoriapalace.ci", name: "KONAN AMINATA", password: "astoria2026", role: "STAFF" } });
+  const lingerieUser = await prisma.user.create({ data: { email: "lingerie@astoriapalace.ci", name: "FOFANA MARIAM", password: "astoria2026", role: "STAFF" } });
+
+  // Staff — Sécurité & Piscine
+  const secu2User  = await prisma.user.create({ data: { email: "securite2@astoriapalace.ci", name: "TOURÉ SEYDOU", password: "astoria2026", role: "STAFF" } });
+  const piscineUser = await prisma.user.create({ data: { email: "piscine@astoriapalace.ci", name: "ZADI HERVÉ", password: "astoria2026", role: "STAFF" } });
+
+  // Staff — Événementiel & Commercial
+  const eventsUser = await prisma.user.create({ data: { email: "events@astoriapalace.ci", name: "SORO NATHALIE", password: "astoria2026", role: "STAFF" } });
+  const commercialUser = await prisma.user.create({ data: { email: "commercial@astoriapalace.ci", name: "KONÉ LACINA", password: "astoria2026", role: "STAFF" } });
+
+  // Staff — IT & Spa
+  const itUser     = await prisma.user.create({ data: { email: "it@astoriapalace.ci", name: "DIABY MOUSSA", password: "astoria2026", role: "STAFF" } });
+  const spaUser    = await prisma.user.create({ data: { email: "spa@astoriapalace.ci", name: "ADJOUA GRÂCE", password: "astoria2026", role: "STAFF" } });
+
+  // Staff — Stagiaires & Extras
+  const stageUser  = await prisma.user.create({ data: { email: "stage1@astoriapalace.ci", name: "YAO KEVIN", password: "astoria2026", role: "STAFF" } });
+  const extraUser  = await prisma.user.create({ data: { email: "extra1@astoriapalace.ci", name: "BAMBA ROKIA", password: "astoria2026", role: "STAFF" } });
+
+  // Clients supplémentaires
+  const client9  = await prisma.user.create({ data: { email: "kouadio.felix@orange.ci", name: "KOUADIO FÉLIX", password: "client123", role: "CLIENT" } });
+  const client10 = await prisma.user.create({ data: { email: "adjoa.colette@gmail.com", name: "ADJOUA COLETTE BÉDIÉ", password: "client123", role: "CLIENT" } });
+  const client11 = await prisma.user.create({ data: { email: "jean.dupont@airfrance.fr", name: "JEAN DUPONT", password: "client123", role: "CLIENT" } });
+  const client12 = await prisma.user.create({ data: { email: "aminata.toure@diplomatie.gouv.ci", name: "AMINATA TOURÉ", password: "client123", role: "CLIENT" } });
+  console.log("✓ Utilisateurs créés (36 comptes : 3 ADMIN, 21 STAFF, 12 CLIENTS)");
 
   // ── 7. Staff RH ───────────────────────────────────────────────────────────
+  // Staff existants
   await prisma.staff.create({ data: { userId: recepUser.id, siteId: site.id, position: "Receptionist", salary: 220000, contractType: "CDI", shift: "Matin (06h - 14h)", status: "ACTIVE" } });
   await prisma.staff.create({ data: { userId: chefUser.id, siteId: site.id, position: "Chef", salary: 480000, contractType: "CDI", shift: "Administratif (08h - 17h)", status: "ACTIVE" } });
   await prisma.staff.create({ data: { userId: govUser.id, siteId: site.id, position: "Housekeeping", salary: 180000, contractType: "CDD", shift: "Après-midi (14h - 22h)", status: "ACTIVE" } });
@@ -128,7 +166,25 @@ async function main() {
   await prisma.staff.create({ data: { userId: secuUser.id, siteId: site.id, position: "Security", salary: 160000, contractType: "CDI", shift: "Nuit (22h - 06h)", status: "ACTIVE" } });
   await prisma.staff.create({ data: { userId: maintenUser.id, siteId: site.id, position: "Maintenance", salary: 195000, contractType: "CDI", shift: "Matin (06h - 14h)", status: "ACTIVE" } });
   await prisma.staff.create({ data: { userId: recep2User.id, siteId: site.id, position: "Receptionist", salary: 215000, contractType: "CDI", shift: "Après-midi (14h - 22h)", status: "ACTIVE" } });
-  console.log("✓ Staff RH");
+
+  // Nouveaux staff
+  await prisma.staff.create({ data: { userId: dgaUser.id, siteId: site.id, position: "Directeur Général Adjoint", salary: 650000, contractType: "CDI", shift: "Administratif (08h - 17h)", status: "ACTIVE" } });
+  await prisma.staff.create({ data: { userId: dafUser.id, siteId: site.id, position: "Directrice Financière (DAF)", salary: 550000, contractType: "CDI", shift: "Administratif (08h - 17h)", status: "ACTIVE" } });
+  await prisma.staff.create({ data: { userId: nightAudit.id, siteId: site.id, position: "Night Auditor", salary: 230000, contractType: "CDI", shift: "Nuit (22h - 06h)", status: "ACTIVE" } });
+  await prisma.staff.create({ data: { userId: conciergeUser.id, siteId: site.id, position: "Concierge Chef", salary: 250000, contractType: "CDI", shift: "Matin (06h - 14h)", status: "ACTIVE" } });
+  await prisma.staff.create({ data: { userId: sousChef.id, siteId: site.id, position: "Sous-Chef de Cuisine", salary: 320000, contractType: "CDI", shift: "Matin (06h - 14h)", status: "ACTIVE" } });
+  await prisma.staff.create({ data: { userId: serveurUser.id, siteId: site.id, position: "Maître d'Hôtel / Serveur", salary: 195000, contractType: "CDI", shift: "Après-midi (14h - 22h)", status: "ACTIVE" } });
+  await prisma.staff.create({ data: { userId: gov2User.id, siteId: site.id, position: "Gouvernante Adjointe", salary: 170000, contractType: "CDD", shift: "Matin (06h - 14h)", status: "ACTIVE" } });
+  await prisma.staff.create({ data: { userId: lingerieUser.id, siteId: site.id, position: "Responsable Lingerie", salary: 155000, contractType: "CDI", shift: "Matin (06h - 14h)", status: "ACTIVE" } });
+  await prisma.staff.create({ data: { userId: secu2User.id, siteId: site.id, position: "Agent de Sécurité", salary: 150000, contractType: "CDI", shift: "Après-midi (14h - 22h)", status: "ACTIVE" } });
+  await prisma.staff.create({ data: { userId: piscineUser.id, siteId: site.id, position: "Maître-Nageur / Responsable Piscine", salary: 180000, contractType: "CDD", shift: "Matin (06h - 14h)", status: "ACTIVE" } });
+  await prisma.staff.create({ data: { userId: eventsUser.id, siteId: site.id, position: "Responsable Événementiel", salary: 280000, contractType: "CDI", shift: "Administratif (08h - 17h)", status: "ACTIVE" } });
+  await prisma.staff.create({ data: { userId: commercialUser.id, siteId: site.id, position: "Commercial / Marketing", salary: 260000, contractType: "CDI", shift: "Administratif (08h - 17h)", status: "ACTIVE" } });
+  await prisma.staff.create({ data: { userId: itUser.id, siteId: site.id, position: "Responsable Informatique", salary: 300000, contractType: "CDI", shift: "Administratif (08h - 17h)", status: "ACTIVE" } });
+  await prisma.staff.create({ data: { userId: spaUser.id, siteId: site.id, position: "Responsable Spa & Bien-être", salary: 220000, contractType: "CDI", shift: "Après-midi (14h - 22h)", status: "ACTIVE" } });
+  await prisma.staff.create({ data: { userId: stageUser.id, siteId: site.id, position: "Stagiaire Réception", salary: 75000, contractType: "Stage", shift: "Matin (06h - 14h)", status: "ACTIVE" } });
+  await prisma.staff.create({ data: { userId: extraUser.id, siteId: site.id, position: "Extra Restauration", salary: 85000, contractType: "Extra", shift: "Nuit (22h - 06h)", status: "ACTIVE" } });
+  console.log("✓ Staff RH (23 fiches)");
 
   // ── 8. Préférences clients & Fidélité ─────────────────────────────────────
   const clientsWithPrefs = [
