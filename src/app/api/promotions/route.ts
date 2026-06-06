@@ -3,6 +3,8 @@ import { prisma } from "@/lib/prisma";
 import { verifyAccess } from "@/lib/auth";
 
 // GET /api/promotions - List all promotional offers
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);

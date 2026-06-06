@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
 // GET /api/halls - Retrieve all reception halls
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
     const halls = await prisma.receptionHall.findMany({

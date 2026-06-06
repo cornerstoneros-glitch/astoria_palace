@@ -3,6 +3,8 @@ import { prisma } from "@/lib/prisma";
 import { verifyAccess } from "@/lib/auth";
 
 // GET /api/hr - Retrieve all staff details
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
     const { authorized } = await verifyAccess(request, ["ADMIN", "STAFF"]);

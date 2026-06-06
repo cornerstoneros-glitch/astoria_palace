@@ -3,6 +3,8 @@ import { prisma } from "@/lib/prisma";
 import { verifyAccess } from "@/lib/auth";
 
 // GET /api/transactions - Retrieve financial transactions
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
     const { authorized } = await verifyAccess(request, ["ADMIN", "STAFF"]);
