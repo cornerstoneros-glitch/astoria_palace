@@ -13,8 +13,20 @@ const playfair = Playfair_Display({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://astoriapalace.ci"),
   title: "Hôtel Astoria Palace — Complexe Hôtelier 4 Étoiles à Abidjan",
   description: "Système de Gestion Hôtelière Intégré (SGHI) de l'Hôtel Astoria Palace, Yopougon, Côte d'Ivoire. Hébergement de standing supérieur, restauration raffinée, loisirs et événements d'exception.",
+  icons: {
+    icon: "/logo.jpg",
+    apple: "/logo.jpg",
+  },
+  openGraph: {
+    title: "Hôtel Astoria Palace — Complexe Hôtelier 4 Étoiles",
+    description: "Hébergement de standing supérieur, restauration raffinée, loisirs et événements d'exception à Yopougon, Abidjan.",
+    images: [{ url: "/logo.jpg", width: 800, height: 450, alt: "Logo Hôtel Astoria Palace" }],
+    locale: "fr_CI",
+    type: "website",
+  },
 };
 
 export default function RootLayout({
