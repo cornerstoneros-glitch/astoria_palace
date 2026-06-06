@@ -31,6 +31,8 @@ export default function BookingWidget() {
 
   // Active reservation modal states
   const [selectedRoomType, setSelectedRoomType] = useState<RoomAvailability | null>(null);
+  const [step, setStep] = useState(1);
+  const [upsellOptions, setUpsellOptions] = useState<{id: string, name: string, price: number}[]>([]);
   const [clientForm, setClientForm] = useState({
     name: "",
     email: "",
@@ -102,6 +104,7 @@ export default function BookingWidget() {
           clientName: clientForm.name,
           clientEmail: clientForm.email,
           clientPhone: clientForm.phone,
+          options: upsellOptions, // API ignores or appends this to notes
         }),
       });
 
@@ -122,6 +125,8 @@ export default function BookingWidget() {
 
   const closeModal = () => {
     setSelectedRoomType(null);
+    setStep(1);
+    setUpsellOptions([]);
     setClientForm({ name: "", email: "", phone: "" });
     setBookingSuccess(null);
     setBookingError(null);
@@ -300,143 +305,128 @@ export default function BookingWidget() {
                 <h3 className="text-base font-serif font-bold">Demande de Réservation</h3>
                 <p className="text-[10px] text-slate-200 mt-1 uppercase tracking-wider">{selectedRoomType.name}</p>
               </div>
-              <button 
-                onClick={closeModal}
-                className="text-white hover:text-slate-200 text-lg font-bold"
-              >
-                ✕
-              </button>
+              <button onClick={closeModal} className="text-white hover:text-slate-200 text-lg font-bold">✕</button>
             </div>
 
             {/* Modal Body */}
             <div className="p-6">
+              {/* Progress Tracker */}
+              {!bookingSuccess && (
+                <div className="flex items-center justify-center gap-2 mb-6">
+                  <div className={`w-3 h-3 rounded-full ${step >= 1 ? 'bg-[#c5a059]' : 'bg-slate-200'}`} />
+                  <div className={`w-12 h-0.5 ${step >= 2 ? 'bg-[#c5a059]' : 'bg-slate-200'}`} />
+                  <div className={`w-3 h-3 rounded-full ${step >= 2 ? 'bg-[#c5a059]' : 'bg-slate-200'}`} />
+                </div>
+              )}
+
               {!bookingSuccess ? (
-                <form onSubmit={handleBookingSubmit} className="space-y-4">
+                <form onSubmit={step === 1 ? (e) => { e.preventDefault(); setStep(2); } : handleBookingSubmit} className="space-y-4">
                   {/* Summary row */}
-                  <div className="grid grid-cols-2 gap-4 p-3 rounded-lg bg-slate-50 border border-slate-150 text-xs text-slate-650 mb-2">
+                  <div className="grid grid-cols-2 gap-4 p-3 rounded-lg bg-slate-50 border border-slate-150 text-xs text-slate-650 mb-4">
                     <div>
-                      <span className="text-[10px] uppercase font-bold text-slate-400 block">Dates de séjour</span>
-                      <strong className="text-slate-800">{new Date(checkIn).toLocaleDateString("fr-FR")} au {new Date(checkOut).toLocaleDateString("fr-FR")}</strong>
+                      <span className="text-[10px] uppercase font-bold text-slate-400 block">Dates</span>
+                      <strong className="text-slate-800">{new Date(checkIn).toLocaleDateString("fr-FR")} - {new Date(checkOut).toLocaleDateString("fr-FR")}</strong>
                     </div>
                     <div>
-                      <span className="text-[10px] uppercase font-bold text-slate-400 block">Tarif Estimé</span>
+                      <span className="text-[10px] uppercase font-bold text-slate-400 block">Tarif Total Estimé</span>
                       <strong className="text-[#0d5ca3] font-black text-sm">
-                        {(getNightsCount() * selectedRoomType.price).toLocaleString("fr-FR")} FCFA 
-                        <span className="text-[10px] text-slate-500 font-normal"> ({getNightsCount()} nuits)</span>
+                        {((getNightsCount() * selectedRoomType.price) + upsellOptions.reduce((acc, o) => acc + o.price, 0)).toLocaleString("fr-FR")} F 
                       </strong>
                     </div>
                   </div>
 
-                  {/* Customer Information Inputs */}
-                  <div>
-                    <label className="block text-[10px] font-black uppercase tracking-wider text-slate-500 mb-1">
-                      Nom & Prénom
-                    </label>
-                    <input 
-                      type="text" 
-                      required
-                      placeholder="ex: KOUAME PATRICE YAO"
-                      value={clientForm.name}
-                      onChange={(e) => setClientForm({ ...clientForm, name: e.target.value })}
-                      className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 focus:border-[#c5a059] focus:outline-none"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-[10px] font-black uppercase tracking-wider text-slate-500 mb-1">
-                      Adresse E-mail
-                    </label>
-                    <input 
-                      type="email" 
-                      required
-                      placeholder="ex: patrice.yao@gmail.com"
-                      value={clientForm.email}
-                      onChange={(e) => setClientForm({ ...clientForm, email: e.target.value })}
-                      className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 focus:border-[#c5a059] focus:outline-none"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-[10px] font-black uppercase tracking-wider text-slate-500 mb-1">
-                      Numéro de Téléphone
-                    </label>
-                    <input 
-                      type="tel" 
-                      required
-                      placeholder="ex: +225 07 08 09 10 11"
-                      value={clientForm.phone}
-                      onChange={(e) => setClientForm({ ...clientForm, phone: e.target.value })}
-                      className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 focus:border-[#c5a059] focus:outline-none"
-                    />
-                  </div>
-
-                  {bookingError && (
-                    <p className="text-xs text-red-650 font-bold bg-red-50 p-2.5 rounded border border-red-200">{bookingError}</p>
+                  {step === 1 && (
+                    <div className="space-y-4 animate-fadeIn">
+                      <h4 className="text-xs font-bold uppercase text-slate-500 border-b border-slate-200 pb-2">1. Vos Coordonnées</h4>
+                      <div>
+                        <label className="block text-[10px] font-black uppercase tracking-wider text-slate-500 mb-1">Nom & Prénom</label>
+                        <input type="text" required value={clientForm.name} onChange={(e) => setClientForm({ ...clientForm, name: e.target.value })} className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 focus:border-[#c5a059] focus:outline-none" />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-black uppercase tracking-wider text-slate-500 mb-1">Adresse E-mail</label>
+                        <input type="email" required value={clientForm.email} onChange={(e) => setClientForm({ ...clientForm, email: e.target.value })} className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 focus:border-[#c5a059] focus:outline-none" />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-black uppercase tracking-wider text-slate-500 mb-1">Numéro de Téléphone</label>
+                        <input type="tel" required value={clientForm.phone} onChange={(e) => setClientForm({ ...clientForm, phone: e.target.value })} className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 focus:border-[#c5a059] focus:outline-none" />
+                      </div>
+                    </div>
                   )}
 
-                  <div className="flex items-center gap-3 pt-3 border-t border-slate-100">
-                    <button 
-                      type="button" 
-                      onClick={closeModal}
-                      className="w-1/3 py-2.5 rounded-lg text-xs font-bold uppercase text-slate-500 border border-slate-200 hover:bg-slate-50 transition-all text-center"
-                    >
-                      Annuler
-                    </button>
-                    <button 
-                      type="submit" 
-                      disabled={bookingLoading}
-                      className="w-2/3 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider bg-gradient-to-r from-[#c5a059] to-[#b08b45] hover:from-[#b08b45] hover:to-[#c5a059] text-slate-950 font-sans shadow-md flex items-center justify-center gap-1.5"
-                    >
-                      {bookingLoading ? (
-                        <span className="w-4 h-4 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
-                      ) : (
-                        "Confirmer la Réservation"
-                      )}
+                  {step === 2 && (
+                    <div className="space-y-4 animate-fadeIn">
+                      <h4 className="text-xs font-bold uppercase text-[#c5a059] border-b border-slate-200 pb-2">2. Améliorez votre séjour (Optionnel)</h4>
+                      
+                      {/* Option 1 */}
+                      <label className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-all ${upsellOptions.find(o => o.id === "transfer") ? "bg-[#c5a059]/10 border-[#c5a059]" : "bg-white border-slate-200 hover:border-[#c5a059]/50"}`}>
+                        <input type="checkbox" className="mt-1 accent-[#c5a059]" 
+                          checked={!!upsellOptions.find(o => o.id === "transfer")}
+                          onChange={(e) => {
+                            if (e.target.checked) setUpsellOptions([...upsellOptions, { id: "transfer", name: "Transfert Aéroport", price: 25000 }]);
+                            else setUpsellOptions(upsellOptions.filter(o => o.id !== "transfer"));
+                          }} 
+                        />
+                        <div className="flex-1">
+                          <div className="flex justify-between items-center">
+                            <span className="font-bold text-sm text-slate-900">Transfert Aéroport VIP</span>
+                            <span className="font-bold text-[#b08b45] text-xs">+25 000 F</span>
+                          </div>
+                          <p className="text-[10px] text-slate-500 mt-0.5 leading-tight">Navette privée depuis l'aéroport FHB directement jusqu'à l'hôtel.</p>
+                        </div>
+                      </label>
+
+                      {/* Option 2 */}
+                      <label className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-all ${upsellOptions.find(o => o.id === "spa") ? "bg-[#c5a059]/10 border-[#c5a059]" : "bg-white border-slate-200 hover:border-[#c5a059]/50"}`}>
+                        <input type="checkbox" className="mt-1 accent-[#c5a059]" 
+                          checked={!!upsellOptions.find(o => o.id === "spa")}
+                          onChange={(e) => {
+                            if (e.target.checked) setUpsellOptions([...upsellOptions, { id: "spa", name: "Pass Spa Intense", price: 40000 }]);
+                            else setUpsellOptions(upsellOptions.filter(o => o.id !== "spa"));
+                          }} 
+                        />
+                        <div className="flex-1">
+                          <div className="flex justify-between items-center">
+                            <span className="font-bold text-sm text-slate-900">Pass Spa Intense (2 Pers)</span>
+                            <span className="font-bold text-[#b08b45] text-xs">+40 000 F</span>
+                          </div>
+                          <p className="text-[10px] text-slate-500 mt-0.5 leading-tight">Accès illimité au jacuzzi et massage relaxant de 45 minutes.</p>
+                        </div>
+                      </label>
+
+                    </div>
+                  )}
+
+                  {bookingError && <p className="text-xs text-red-650 font-bold bg-red-50 p-2.5 rounded border border-red-200">{bookingError}</p>}
+
+                  <div className="flex items-center gap-3 pt-4 border-t border-slate-100">
+                    {step === 2 && (
+                      <button type="button" onClick={() => setStep(1)} className="w-1/3 py-2.5 rounded-lg text-xs font-bold uppercase text-slate-500 border border-slate-200 hover:bg-slate-50 transition-all text-center">
+                        Retour
+                      </button>
+                    )}
+                    <button type="submit" disabled={bookingLoading} className={`${step === 1 ? 'w-full' : 'w-2/3'} py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider bg-gradient-to-r from-[#c5a059] to-[#b08b45] hover:from-[#b08b45] hover:to-[#c5a059] text-slate-950 font-sans shadow-md flex items-center justify-center gap-1.5`}>
+                      {bookingLoading ? <span className="w-4 h-4 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" /> : (step === 1 ? "Continuer" : "Confirmer la Réservation")}
                     </button>
                   </div>
                 </form>
               ) : (
                 /* Success Card Display */
                 <div className="text-center py-6 space-y-4">
-                  <div className="w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto text-xl font-bold">
-                    ✓
-                  </div>
+                  <div className="w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto text-xl font-bold">✓</div>
                   <h4 className="text-lg font-bold text-slate-900 font-serif">Réservation Confirmée !</h4>
-                  <p className="text-xs text-slate-500 max-w-sm mx-auto">
-                    Votre séjour a été enregistré avec succès dans notre registre d'hébergement. Voici les détails :
-                  </p>
-
+                  <p className="text-xs text-slate-500 max-w-sm mx-auto">Votre séjour a été enregistré avec succès. Voici les détails :</p>
                   <div className="p-4 rounded-xl bg-slate-50 border border-slate-150 text-xs text-left space-y-2 max-w-sm mx-auto">
-                    <div className="flex justify-between">
-                      <span className="text-slate-400 font-medium">Chambre assignée :</span>
-                      <span className="font-bold text-slate-800">N° {bookingSuccess.roomNumber} ({bookingSuccess.roomTypeName})</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-400 font-medium">Arrivée - Départ :</span>
-                      <span className="font-bold text-slate-800">
-                        {new Date(bookingSuccess.checkIn).toLocaleDateString("fr-FR")} au {new Date(bookingSuccess.checkOut).toLocaleDateString("fr-FR")}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-400 font-medium">Total facturé :</span>
-                      <span className="font-bold text-[#0d5ca3]">{bookingSuccess.totalPrice.toLocaleString("fr-FR")} FCFA</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-400 font-medium">Statut :</span>
-                      <span className="px-2 py-0.5 rounded bg-amber-50 text-[#b08b45] font-bold border border-amber-200 uppercase text-[9px]">En attente de paiement</span>
-                    </div>
+                    <div className="flex justify-between"><span className="text-slate-400 font-medium">Chambre :</span><span className="font-bold text-slate-800">N° {bookingSuccess.roomNumber} ({bookingSuccess.roomTypeName})</span></div>
+                    <div className="flex justify-between"><span className="text-slate-400 font-medium">Arrivée - Départ :</span><span className="font-bold text-slate-800">{new Date(bookingSuccess.checkIn).toLocaleDateString("fr-FR")} au {new Date(bookingSuccess.checkOut).toLocaleDateString("fr-FR")}</span></div>
+                    {upsellOptions.length > 0 && (
+                      <div className="flex flex-col pt-1">
+                        <span className="text-slate-400 font-medium border-t border-slate-200 pt-1 mt-1">Options ajoutées :</span>
+                        {upsellOptions.map(o => <div key={o.id} className="text-[#c5a059] font-bold text-[10px] text-right">+ {o.name}</div>)}
+                      </div>
+                    )}
+                    <div className="flex justify-between mt-2 pt-2 border-t border-slate-200"><span className="text-slate-400 font-medium">Total facturé :</span><span className="font-bold text-[#0d5ca3]">{(bookingSuccess.totalPrice + upsellOptions.reduce((acc, o) => acc + o.price, 0)).toLocaleString("fr-FR")} FCFA</span></div>
                   </div>
-
-                  <p className="text-[10px] text-slate-400">
-                    Veuillez préparer votre pièce d'identité (CNI ou Passeport) à votre arrivée pour le KYC réglementaire.
-                  </p>
-
-                  <button 
-                    onClick={closeModal}
-                    className="w-full py-2.5 rounded-lg text-xs font-bold uppercase bg-slate-900 text-white hover:bg-slate-800 transition-all max-w-xs mx-auto block"
-                  >
-                    Fermer la fenêtre
-                  </button>
+                  <button onClick={closeModal} className="w-full py-2.5 rounded-lg text-xs font-bold uppercase bg-slate-900 text-white hover:bg-slate-800 transition-all max-w-xs mx-auto block">Fermer</button>
                 </div>
               )}
             </div>

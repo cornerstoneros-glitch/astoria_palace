@@ -9,7 +9,7 @@ export async function PATCH(
   try {
     const { id } = await params;
     const body = await request.json();
-    const { number, status, roomTypeId, siteId } = body;
+    const { number, status, cleaningStatus, roomTypeId, siteId } = body;
 
     // Check if room exists
     const roomExists = await prisma.room.findUnique({
@@ -27,6 +27,7 @@ export async function PATCH(
     const updateData: any = {};
     if (number !== undefined) updateData.number = number;
     if (status !== undefined) updateData.status = status;
+    if (cleaningStatus !== undefined) updateData.cleaningStatus = cleaningStatus;
     if (roomTypeId !== undefined) updateData.roomTypeId = roomTypeId;
     if (siteId !== undefined) updateData.siteId = siteId;
 

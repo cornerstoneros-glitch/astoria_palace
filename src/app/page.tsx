@@ -3,6 +3,9 @@ import { prisma } from "@/lib/prisma";
 import BookingWidget from "./components/BookingWidget";
 import LoyaltySignupForm from "./components/LoyaltySignupForm";
 import FaqAccordion from "./components/FaqAccordion";
+import ChatbotWidget from "./components/ChatbotWidget";
+import LuxuryHeader from "./components/LuxuryHeader";
+import LuxuryHero from "./components/LuxuryHero";
 
 export const revalidate = 0;
 
@@ -57,97 +60,10 @@ export default async function Home() {
     <div className="flex flex-col min-h-screen bg-slate-50 text-slate-800 font-sans selection:bg-[#c5a059]/20 selection:text-[#c5a059]">
 
       {/* ─── HEADER ─────────────────────────────────────────────────────────── */}
-      <header className="fixed top-0 left-0 right-0 z-50 backdrop-blur-md bg-white/90 border-b border-slate-200/80 px-6 lg:px-16 py-3.5 flex items-center justify-between shadow-sm">
-        <div className="flex items-center gap-4">
-          <img src="/logo.jpg" alt="Hôtel Astoria Palace Logo" className="h-12 w-auto object-contain rounded-lg border border-slate-200 bg-white p-1 hover:scale-105 transition-transform" />
-          <div className="flex flex-col">
-            <span className="text-lg font-black tracking-tight font-serif text-[#0f172a] leading-tight">ASTORIA PALACE</span>
-            <div className="flex items-center gap-0.5 text-[10px] text-[#c5a059] font-bold">
-              <span>★</span><span>★</span><span>★</span><span>★</span>
-              <span className="text-slate-500 font-sans tracking-normal ml-2 lowercase">Hôtel 4 Étoiles</span>
-            </div>
-          </div>
-        </div>
-
-        <nav className="hidden md:flex items-center gap-8 text-sm font-semibold text-slate-600">
-          <a href="#hero" className="hover:text-[#0d5ca3] transition-colors">Accueil</a>
-          <a href="#chambres" className="hover:text-[#0d5ca3] transition-colors">Hébergements</a>
-          <a href="#gastronomie" className="hover:text-[#0d5ca3] transition-colors">Gastronomie</a>
-          <a href="#services" className="hover:text-[#0d5ca3] transition-colors">Loisirs & Salles</a>
-          <span className="w-1.5 h-1.5 rounded-full bg-slate-300" />
-          <Link href="/dashboard" className="text-[#c5a059] hover:text-[#b08b45] transition-colors flex items-center gap-1.5 font-black">
-            Portail SGHI <span className="text-xs">→</span>
-          </Link>
-        </nav>
-
-        <Link href="/dashboard" className="px-5 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider bg-gradient-to-r from-[#0d5ca3] to-[#1e40af] hover:from-[#1e40af] hover:to-[#0d5ca3] text-white shadow-md shadow-blue-500/10 hover:shadow-blue-500/20 active:scale-95 transition-all">
-          Espace Gestion
-        </Link>
-      </header>
+      <LuxuryHeader />
 
       {/* ─── HERO BANNER ────────────────────────────────────────────────────── */}
-      <section id="hero" className="relative w-full h-screen min-h-[620px] max-h-[900px] flex items-center justify-center overflow-hidden">
-        {/* Background image with parallax effect */}
-        <img
-          src="/large_vue.jpg"
-          alt="Hôtel Astoria Palace — Vue d'ensemble"
-          className="absolute inset-0 w-full h-full object-cover scale-105"
-          style={{ objectPosition: "center 30%" }}
-        />
-        {/* Gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-b from-slate-900/70 via-slate-900/50 to-slate-900/80" />
-        {/* Subtle gold shimmer at top */}
-        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[#c5a059] to-transparent opacity-80" />
-
-        {/* Content */}
-        <div className="relative z-10 flex flex-col items-center text-center px-6 max-w-5xl mx-auto pt-16">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#c5a059]/20 border border-[#c5a059]/40 text-xs text-[#d4af37] font-bold mb-6 backdrop-blur-sm">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#c5a059] animate-pulse" />
-            Votre Havre de Prestige à Yopougon, Abidjan
-          </div>
-
-          <h1 className="text-4xl md:text-6xl lg:text-7xl font-black font-serif tracking-tight text-white mb-6 leading-[1.1]">
-            L'Excellence Africaine<br />
-            <span className="bg-gradient-to-r from-[#c5a059] via-[#d4af37] to-[#c5a059] bg-clip-text text-transparent">
-              au Cœur d'Abidjan
-            </span>
-          </h1>
-
-          <p className="text-slate-200 text-lg md:text-xl max-w-2xl leading-relaxed mb-10">
-            Cadre d'hébergement exceptionnel de standing 4 étoiles, gastronomie ivoirienne raffinée, piscine lagon et salons événementiels de prestige.
-          </p>
-
-          <div className="flex flex-col sm:flex-row items-center gap-4">
-            <a href="#chambres" className="px-8 py-3.5 rounded-lg font-bold bg-gradient-to-r from-[#c5a059] to-[#b08b45] hover:from-[#b08b45] hover:to-[#c5a059] text-slate-950 shadow-lg shadow-amber-500/20 transition-all hover:-translate-y-0.5 hover:shadow-xl">
-              Réserver ma Chambre
-            </a>
-            <a href="#gastronomie" className="px-8 py-3.5 rounded-lg font-bold bg-white/10 border border-white/30 text-white hover:bg-white/20 backdrop-blur-sm transition-all hover:-translate-y-0.5">
-              Découvrir l'Hôtel
-            </a>
-          </div>
-
-          {/* Stats row */}
-          <div className="mt-12 flex flex-wrap justify-center gap-8 text-white">
-            {[
-              { value: "77", label: "Chambres & Suites" },
-              { value: "4★", label: "Étoiles" },
-              { value: "300", label: "Places événements" },
-              { value: "24/7", label: "Service Conciergerie" },
-            ].map((s) => (
-              <div key={s.label} className="flex flex-col items-center">
-                <span className="text-3xl font-black font-serif text-[#c5a059]">{s.value}</span>
-                <span className="text-xs text-slate-300 font-semibold mt-0.5">{s.label}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Scroll indicator */}
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 text-white/50 animate-bounce">
-          <span className="text-[10px] tracking-widest uppercase font-semibold">Défiler</span>
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
-        </div>
-      </section>
+      <LuxuryHero />
 
       {/* ─── GALERIE RAPIDE ─────────────────────────────────────────────────── */}
       <section className="w-full grid grid-cols-2 md:grid-cols-4 h-64 md:h-80">
@@ -602,6 +518,9 @@ export default async function Home() {
           </div>
         </div>
       </footer>
+
+      {/* Floating Chatbot Widget */}
+      <ChatbotWidget />
     </div>
   );
 }

@@ -8,6 +8,8 @@ import ConciergePanel from "./components/ConciergePanel";
 import CrmPanel from "./components/CrmPanel";
 import NightAuditPanel from "./components/NightAuditPanel";
 import AccountingPanel from "./components/AccountingPanel";
+import TapeChartPanel from "./components/TapeChartPanel";
+import RestaurantPosPanel from "./components/RestaurantPosPanel";
 
 export default function Dashboard() {
   // Database datasets
@@ -920,6 +922,18 @@ export default function Dashboard() {
                   </button>
 
                   <button 
+                    onClick={() => setActiveTab("housekeeping")}
+                    className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-left transition-all ${
+                      activeTab === "housekeeping" 
+                        ? "bg-[#0d5ca3] text-white shadow-sm" 
+                        : "text-slate-655 hover:bg-slate-200/50 hover:text-slate-900"
+                    }`}
+                  >
+                    <span className="text-sm">🧹</span>
+                    Housekeeping
+                  </button>
+
+                  <button 
                     onClick={() => setActiveTab("inventory")}
                     className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-left transition-all ${
                       activeTab === "inventory" 
@@ -1120,8 +1134,10 @@ export default function Dashboard() {
                   })}
                 </div>
 
+                <TapeChartPanel rooms={rooms} reservations={reservations} />
+
                 {/* Bookings & Register split */}
-                <div className="grid lg:grid-cols-3 gap-8">
+                <div className="grid lg:grid-cols-3 gap-8 mt-4">
                   {/* Bookings List */}
                   <div className="lg:col-span-2 flex flex-col gap-4">
                     <h3 className="text-base font-bold text-slate-900 font-serif">Arrivées & KYC Résidents</h3>
@@ -1158,12 +1174,25 @@ export default function Dashboard() {
                                 <span className="text-[9px] font-extrabold uppercase text-slate-500">Statut : <span className="text-[#b08b45]">{res.status}</span></span>
                                 <div className="flex gap-2">
                                   {!isKycSubmitted && (
-                                    <button 
-                                      onClick={() => setKycResId(res.id)}
-                                      className="px-2.5 py-1 rounded text-[10px] font-bold bg-[#c5a059]/10 hover:bg-[#c5a059]/20 text-[#b08b45] border border-[#c5a059]/40"
-                                    >
-                                      Enregistrer ID
-                                    </button>
+                                    <>
+                                      <button 
+                                        onClick={() => {
+                                          const link = `${window.location.origin}/checkin/${res.id}`;
+                                          navigator.clipboard.writeText(link);
+                                          alert("Lien KYC copié : " + link);
+                                        }}
+                                        className="px-2.5 py-1 rounded text-[10px] font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300"
+                                        title="Copier le lien public"
+                                      >
+                                        🔗 Copier Lien KYC
+                                      </button>
+                                      <button 
+                                        onClick={() => setKycResId(res.id)}
+                                        className="px-2.5 py-1 rounded text-[10px] font-bold bg-[#c5a059]/10 hover:bg-[#c5a059]/20 text-[#b08b45] border border-[#c5a059]/40"
+                                      >
+                                        Saisie Manuelle
+                                      </button>
+                                    </>
                                   )}
                                   {res.status === "PENDING" && (
                                     <button 
@@ -1581,154 +1610,7 @@ export default function Dashboard() {
                   <p className="text-xs text-slate-550">Saisissez les tickets de commande en direct et suivez la facturation.</p>
                 </div>
 
-                <div className="grid lg:grid-cols-3 gap-8">
-                  {/* Live orders registry */}
-                  <div className="lg:col-span-2 flex flex-col gap-4">
-                    <h3 className="text-base font-bold text-slate-900 font-serif">Commandes Actives</h3>
-
-                    <div className="flex flex-col gap-3">
-                      {orders.filter(o => o.status !== "CANCELLED").length === 0 ? (
-                        <div className="p-6 text-center bg-white border border-slate-200 rounded-xl text-slate-450 text-xs">
-                          Aucune commande active.
-                        </div>
-                      ) : (
-                        orders.filter(o => o.status !== "CANCELLED").map((order) => {
-                          const orderDate = new Date(order.createdAt).toLocaleTimeString("fr-FR", { hour: '2-digit', minute: '2-digit' });
-                          const isPaid = order.status === "PAID";
-                          const isServed = order.status === "SERVED";
-
-                          return (
-                            <div key={order.id} className="p-4 bg-white border border-slate-200 rounded-xl shadow-sm flex flex-col sm:flex-row justify-between sm:items-center gap-4 text-xs font-semibold">
-                              <div>
-                                <div className="flex items-center gap-2 mb-1.5">
-                                  <span className="px-2 py-0.5 rounded text-[9px] font-extrabold bg-[#0d5ca3]/15 text-[#0d5ca3]">{order.type}</span>
-                                  {order.tableNumber && <span className="text-xs text-slate-600 font-bold">{order.tableNumber}</span>}
-                                  {order.roomNumber && <span className="text-xs text-slate-600 font-bold">Chambre {order.roomNumber}</span>}
-                                </div>
-                                <div className="flex flex-col gap-1 pl-1">
-                                  {order.items?.map((item: any) => (
-                                    <span key={item.id} className="text-slate-800 text-[11px] font-bold">
-                                      - {item.dishName} <span className="text-slate-400 font-normal">x{item.quantity}</span>
-                                    </span>
-                                  ))}
-                                </div>
-                                <div className="text-[10px] text-slate-400 mt-2">
-                                  <span>📅 Commande reçue à {orderDate}</span> | <span className="text-slate-900 font-extrabold">Total : {order.totalPrice.toLocaleString("fr-FR")} F</span>
-                                </div>
-                              </div>
-
-                              <div className="flex flex-col sm:items-end gap-1.5 shrink-0">
-                                <span className={`text-[10px] font-bold uppercase tracking-wider ${
-                                  isPaid ? 'text-emerald-600 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded' 
-                                  : 'text-[#b08b45] bg-[#c5a059]/10 border border-[#c5a059]/20 px-1.5 py-0.5 rounded'
-                                }`}>
-                                  {order.status}
-                                </span>
-
-                                {!isPaid && (
-                                  <div className="flex gap-1 mt-1">
-                                    {!isServed && (
-                                      <button 
-                                        onClick={() => handleOrderUpdateStatus(order.id, "SERVED")}
-                                        className="px-2.5 py-1 rounded text-[9px] font-extrabold bg-[#0d5ca3] text-white hover:bg-[#0d5ca3]/90"
-                                      >
-                                        Servi
-                                      </button>
-                                    )}
-                                    <button 
-                                      onClick={() => handleOrderUpdateStatus(order.id, "PAID")}
-                                      className="px-2.5 py-1 rounded text-[9px] font-extrabold bg-gradient-to-r from-[#c5a059] to-[#b08b45] text-slate-950 shadow-sm"
-                                    >
-                                      Encaisser
-                                    </button>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          );
-                        })
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Place Order form */}
-                  <div>
-                    <h3 className="text-base font-bold text-slate-900 font-serif mb-4">Prise de Commande</h3>
-                    <form onSubmit={handleCreateOrder} className="p-4 rounded-xl bg-white border border-slate-200 shadow-sm flex flex-col gap-3.5 text-xs font-semibold">
-                      {orderError && <div className="p-2 rounded bg-rose-50 border border-rose-200 text-rose-700">{orderError}</div>}
-                      {orderSuccess && <div className="p-2 rounded bg-emerald-50 border border-emerald-200 text-emerald-700">{orderSuccess}</div>}
-
-                      <div className="flex flex-col gap-1">
-                        <label className="text-slate-655">Point d'Activité</label>
-                        <select 
-                          value={newOrderForm.type}
-                          onChange={(e) => setNewOrderForm({ ...newOrderForm, type: e.target.value })}
-                          className="p-2 bg-slate-50 border border-slate-200 rounded text-slate-800"
-                        >
-                          <option value="RESTAURANT">Restaurant</option>
-                          <option value="BAR">Pool Bar Lounge</option>
-                          <option value="ROOM_SERVICE">Service de Chambre</option>
-                        </select>
-                      </div>
-
-                      {newOrderForm.type === "ROOM_SERVICE" ? (
-                        <div className="flex flex-col gap-1">
-                          <label className="text-slate-655">Numéro de Chambre</label>
-                          <input 
-                            type="text"
-                            required
-                            placeholder="Ex: 101"
-                            value={newOrderForm.roomNumber}
-                            onChange={(e) => setNewOrderForm({ ...newOrderForm, roomNumber: e.target.value })}
-                            className="p-2 bg-slate-50 border border-slate-200 rounded text-slate-800"
-                          />
-                        </div>
-                      ) : (
-                        <div className="flex flex-col gap-1">
-                          <label className="text-slate-655">Table de Service</label>
-                          <input 
-                            type="text"
-                            required
-                            placeholder="Ex: Table 4"
-                            value={newOrderForm.tableNumber}
-                            onChange={(e) => setNewOrderForm({ ...newOrderForm, tableNumber: e.target.value })}
-                            className="p-2 bg-slate-50 border border-slate-200 rounded text-slate-800"
-                          />
-                        </div>
-                      )}
-
-                      <div className="flex flex-col gap-1">
-                        <label className="text-slate-655">Menu (F&B)</label>
-                        <select 
-                          required
-                          value={newOrderForm.dishId}
-                          onChange={(e) => setNewOrderForm({ ...newOrderForm, dishId: e.target.value })}
-                          className="p-2 bg-slate-50 border border-slate-200 rounded text-slate-800"
-                        >
-                          <option value="">Sélectionner un produit...</option>
-                          {dishes.map((dish) => (
-                            <option key={dish.id} value={dish.id}>{dish.name} ({dish.price} F)</option>
-                          ))}
-                        </select>
-                      </div>
-
-                      <div className="flex flex-col gap-1">
-                        <label className="text-slate-655">Quantité</label>
-                        <input 
-                          type="number"
-                          required
-                          value={newOrderForm.quantity}
-                          onChange={(e) => setNewOrderForm({ ...newOrderForm, quantity: e.target.value as any })}
-                          className="p-2 bg-slate-50 border border-slate-200 rounded text-slate-800"
-                        />
-                      </div>
-
-                      <button type="submit" className="py-2.5 rounded bg-gradient-to-r from-[#c5a059] to-[#b08b45] text-slate-950 font-bold uppercase transition-all shadow-sm">
-                        Valider ticket
-                      </button>
-                    </form>
-                  </div>
-                </div>
+                <RestaurantPosPanel orders={orders} dishes={dishes} onRefresh={fetchData} />
               </div>
             )}
 
@@ -2347,7 +2229,7 @@ export default function Dashboard() {
             )}
 
             {activeTab === "housekeeping" && (
-              <HousekeepingPanel rooms={rooms} onRoomStatusChange={handleRoomStatusChange} />
+              <HousekeepingPanel rooms={rooms} onRefresh={fetchData} />
             )}
 
             {activeTab === "concierge" && (
