@@ -43,7 +43,7 @@ export default function BookingWidget() {
   const [bookingError, setBookingError] = useState<string | null>(null);
 
   // Fetch real-time availability stats
-  const fetchAvailability = async (ci: string, co: string) => {
+  const fetchAvailability = async (ci: string, co: string, isManualSearch = false) => {
     try {
       setLoading(true);
       setError(null);
@@ -52,6 +52,12 @@ export default function BookingWidget() {
       if (json.status === "success") {
         setAvailability(json.data.availability);
         setOverall(json.data.overall);
+        if (isManualSearch) {
+          setTimeout(() => {
+            const grid = document.getElementById("availability-grid");
+            if (grid) grid.scrollIntoView({ behavior: "smooth", block: "center" });
+          }, 100);
+        }
       } else {
         setError(json.message || "Impossible de charger la disponibilité.");
       }
@@ -65,7 +71,7 @@ export default function BookingWidget() {
 
   // Initial load
   useEffect(() => {
-    fetchAvailability(checkIn, checkOut);
+    fetchAvailability(checkIn, checkOut, false);
   }, []);
 
   // Handle Search trigger
@@ -75,7 +81,7 @@ export default function BookingWidget() {
       setError("La date de départ doit être après la date d'arrivée.");
       return;
     }
-    fetchAvailability(checkIn, checkOut);
+    fetchAvailability(checkIn, checkOut, true);
   };
 
   // Calculate duration in nights
@@ -218,7 +224,7 @@ export default function BookingWidget() {
       </div>
 
       {/* AVAILABILITY RESULTS GRID */}
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto px-4">
+      <div id="availability-grid" className={`grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto px-4 transition-all duration-300 ${loading ? "opacity-40 pointer-events-none scale-[0.98]" : "opacity-100 scale-100"}`}>
         {availability.map((type) => {
           const count = type.availableCount;
           const isFilterActive = checkIn !== "" && checkOut !== "";
