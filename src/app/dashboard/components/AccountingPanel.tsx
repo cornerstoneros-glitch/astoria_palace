@@ -341,12 +341,13 @@ export default function AccountingPanel({ transactions, onRefresh }: AccountingP
                   <th className="px-5 py-3 text-center">Type</th>
                   <th className="px-5 py-3 text-center">Statut</th>
                   <th className="px-5 py-3 text-right">Montant</th>
+                  <th className="px-5 py-3 text-right">Document</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200 font-semibold">
                 {filteredTransactions.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="px-5 py-8 text-center text-slate-400">Aucun mouvement comptable trouvé pour ces critères.</td>
+                    <td colSpan={6} className="px-5 py-8 text-center text-slate-400">Aucun mouvement comptable trouvé pour ces critères.</td>
                   </tr>
                 ) : (
                   filteredTransactions.map((t) => {
@@ -387,6 +388,13 @@ export default function AccountingPanel({ transactions, onRefresh }: AccountingP
                         </td>
                         <td className={`px-5 py-3 text-right font-serif font-extrabold ${isPositive ? 'text-emerald-600' : 'text-rose-600'}`}>
                           {isPositive ? `+ ${amountFormatted}` : `${amountFormatted}`} F
+                        </td>
+                        <td className="px-5 py-3 text-right">
+                          {t.status === "PAID" && (
+                            <a href={`/api/documents/invoice?transactionId=${t.id}`} download className="px-2 py-1 rounded bg-slate-100 border border-slate-200 hover:bg-slate-200 text-slate-600 font-bold transition-all text-[10px] flex items-center justify-center gap-1 w-max ml-auto">
+                              <span>📥</span> DOCX
+                            </a>
+                          )}
                         </td>
                       </tr>
                     );
