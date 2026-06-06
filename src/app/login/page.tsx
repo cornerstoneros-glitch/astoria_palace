@@ -18,10 +18,13 @@ export default function Login() {
 
     // Simulate login success since AUTH_ENABLED is currently false
     setTimeout(() => {
-      // Set mock cookie for demonstration
-      document.cookie = "session_token=mock-admin-token; path=/; max-age=3600";
+      // Determine if it's a client login based on email
+      const isClient = email.toLowerCase().includes("client");
+      const role = isClient ? "client" : "admin";
+      
+      document.cookie = `session_token=mock-${role}-token; path=/; max-age=3600`;
       setLoading(false);
-      router.push("/dashboard");
+      router.push(isClient ? "/client" : "/dashboard");
     }, 800);
   };
 
@@ -32,7 +35,11 @@ export default function Login() {
     document.cookie = `session_token=mock-${role.toLowerCase()}-token; path=/; max-age=3600`;
     setTimeout(() => {
       setLoading(false);
-      router.push("/dashboard");
+      if (role === "CLIENT") {
+        router.push("/client");
+      } else {
+        router.push("/dashboard");
+      }
     }, 400);
   };
 
@@ -133,14 +140,14 @@ export default function Login() {
         </div>
 
         {/* Bypass Action Cards */}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-3 gap-3">
           <button 
             onClick={() => handleBypass("ADMIN")}
             disabled={loading}
             className="p-3 text-left rounded-xl border border-slate-200 hover:border-[#c5a059] hover:bg-amber-50/20 transition-all group active:scale-95"
           >
-            <span className="block text-xs font-black text-slate-800 group-hover:text-[#b08b45]">Directeur</span>
-            <span className="text-[10px] text-slate-400 block mt-0.5">Simuler Admin</span>
+            <span className="block text-[11px] font-black text-slate-800 group-hover:text-[#b08b45] truncate">Directeur</span>
+            <span className="text-[9px] text-slate-400 block mt-0.5">Admin</span>
           </button>
 
           <button 
@@ -148,8 +155,17 @@ export default function Login() {
             disabled={loading}
             className="p-3 text-left rounded-xl border border-slate-200 hover:border-[#0d5ca3] hover:bg-blue-50/10 transition-all group active:scale-95"
           >
-            <span className="block text-xs font-black text-slate-800 group-hover:text-[#0d5ca3]">Réceptionniste</span>
-            <span className="text-[10px] text-slate-400 block mt-0.5">Simuler Staff</span>
+            <span className="block text-[11px] font-black text-slate-800 group-hover:text-[#0d5ca3] truncate">Staff</span>
+            <span className="text-[9px] text-slate-400 block mt-0.5">Employé</span>
+          </button>
+
+          <button 
+            onClick={() => handleBypass("CLIENT")}
+            disabled={loading}
+            className="p-3 text-left rounded-xl border border-slate-200 hover:border-emerald-500 hover:bg-emerald-50/10 transition-all group active:scale-95"
+          >
+            <span className="block text-[11px] font-black text-slate-800 group-hover:text-emerald-600 truncate">Client</span>
+            <span className="text-[9px] text-slate-400 block mt-0.5">Résident</span>
           </button>
         </div>
 
