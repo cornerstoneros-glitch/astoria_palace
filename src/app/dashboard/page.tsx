@@ -221,7 +221,6 @@ export default function Dashboard() {
         setSites(testJson.data.sites || []);
         if (usersJson.status !== "success" || !usersJson.data.length) {
           setUsers([
-            { id: "client-id-1", name: "DIBONA ROGER TRAORE", email: "roger.traore@gmail.com", role: "CLIENT" },
             { id: "client-id-2", name: "KOUAME PATRICE YAO", email: "patrice.yao@yahoo.fr", role: "CLIENT" },
             { id: "client-id-3", name: "AMANI KOFFI SERGE", email: "serge.amani@ci-news.com", role: "CLIENT" },
           ]);
