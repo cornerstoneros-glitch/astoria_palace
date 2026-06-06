@@ -372,39 +372,41 @@ export async function GET() {
   console.log("✓ Avis clients");
 
   // ── 17. Comptabilité (Transactions) ───────────────────────────────────────
+  const transactionsData = [
+    // Revenus F&B
+    { amount: 15500,  type: "PAYMENT", status: "PAID", description: "F&B Restaurant — Table 3 — Dîner (Kédjénou + Attiéké)", category: "FNB" },
+    { amount: 25500,  type: "PAYMENT", status: "PAID", description: "F&B Restaurant — Table 7 — Thieboudienne + Brochettes x2", category: "FNB" },
+    { amount: 14500,  type: "PAYMENT", status: "PAID", description: "F&B Bar — Pool Bar Terrasse — Cocktails & Bières", category: "FNB" },
+    { amount: 18000,  type: "PAYMENT", status: "PAID", description: "F&B Bar — Salon VIP Lounge — Vins & Cocktails", category: "FNB" },
+    { amount: 19000,  type: "PAYMENT", status: "PAID", description: "F&B Restaurant — Table 2 — Kédjénou + Thieboudienne", category: "FNB" },
+    // Revenus événements
+    { amount: 400000, type: "PAYMENT", status: "PAID", description: "Location Salle Djiboua — Groupement Inter-Écoles CI", category: "EVENTS" },
+    { amount: 100000, type: "INVOICE", status: "PENDING", description: "Location Salon VIP — Ministère Transition Digitale", category: "EVENTS" },
+    { amount: 600000, type: "INVOICE", status: "PENDING", description: "Location Salle Djiboua — Mariage Kouamé & Diabaté", category: "EVENTS" },
+    // Revenus services
+    { amount: 35000,  type: "PAYMENT", status: "PAID", description: "Transfert aéroport — Client Valérie Assi", category: "FNB" },
+    { amount: 50000,  type: "PAYMENT", status: "PAID", description: "Massages bien-être x2 — Spa Astoria", category: "FNB" },
+    // Charges salariales
+    { amount: -480000, type: "EXPENSE", status: "PAID", description: "Salaire — Jean-Baptiste Kouamé (Chef Cuisine)", category: "SALARY" },
+    { amount: -220000, type: "EXPENSE", status: "PAID", description: "Salaire — Aïssatou Diallo (Réceptionniste Principale)", category: "SALARY" },
+    { amount: -215000, type: "EXPENSE", status: "PAID", description: "Salaire — Traore Awa (Réceptionniste)", category: "SALARY" },
+    { amount: -210000, type: "EXPENSE", status: "PAID", description: "Salaire — Koné Adama (Barman)", category: "SALARY" },
+    { amount: -195000, type: "EXPENSE", status: "PAID", description: "Salaire — Bogui Franck (Maintenance)", category: "SALARY" },
+    { amount: -180000, type: "EXPENSE", status: "PAID", description: "Salaire — Marie-Claire Yao (Gouvernante)", category: "SALARY" },
+    { amount: -160000, type: "EXPENSE", status: "PAID", description: "Salaire — Ouattara Mamadou (Sécurité)", category: "SALARY" },
+    // Charges fixes
+    { amount: -185000, type: "EXPENSE", status: "PAID", description: "Abonnement Électricité CIE — Mai 2026", category: "UTILITIES" },
+    { amount: -42000,  type: "EXPENSE", status: "PAID", description: "Abonnement Internet Fibre Orange CI", category: "UTILITIES" },
+    { amount: -28000,  type: "EXPENSE", status: "PAID", description: "Abonnement Eau SODECI — Mai 2026", category: "UTILITIES" },
+    // Approvisionnements
+    { amount: -95000,  type: "EXPENSE", status: "PAID", description: "Achat Linge — Draps & serviettes (lot 50)", category: "RESTOCK" },
+    { amount: -145000, type: "EXPENSE", status: "PAID", description: "Approvisionnement F&B — Marché Adjamé + Grand Surface", category: "RESTOCK" },
+    { amount: -62000,  type: "EXPENSE", status: "PAID", description: "Approvisionnement Bar — Vins, Spiritueux, Bières", category: "RESTOCK" },
+    { amount: -35000,  type: "EXPENSE", status: "PAID", description: "Produits d'entretien et ménagers (mensuel)", category: "RESTOCK" },
+  ];
+
   await prisma.transaction.createMany({
-    data: [
-      // Revenus F&B
-      { amount: 15500,  type: "PAYMENT", status: "PAID", description: "F&B Restaurant — Table 3 — Dîner (Kédjénou + Attiéké)", category: "FNB" },
-      { amount: 25500,  type: "PAYMENT", status: "PAID", description: "F&B Restaurant — Table 7 — Thieboudienne + Brochettes x2", category: "FNB" },
-      { amount: 14500,  type: "PAYMENT", status: "PAID", description: "F&B Bar — Pool Bar Terrasse — Cocktails & Bières", category: "FNB" },
-      { amount: 18000,  type: "PAYMENT", status: "PAID", description: "F&B Bar — Salon VIP Lounge — Vins & Cocktails", category: "FNB" },
-      { amount: 19000,  type: "PAYMENT", status: "PAID", description: "F&B Restaurant — Table 2 — Kédjénou + Thieboudienne", category: "FNB" },
-      // Revenus événements
-      { amount: 400000, type: "PAYMENT", status: "PAID", description: "Location Salle Djiboua — Groupement Inter-Écoles CI", category: "EVENTS" },
-      { amount: 100000, type: "INVOICE", status: "PENDING", description: "Location Salon VIP — Ministère Transition Digitale", category: "EVENTS" },
-      { amount: 600000, type: "INVOICE", status: "PENDING", description: "Location Salle Djiboua — Mariage Kouamé & Diabaté", category: "EVENTS" },
-      // Revenus services
-      { amount: 35000,  type: "PAYMENT", status: "PAID", description: "Transfert aéroport — Client Valérie Assi", category: "FNB" },
-      { amount: 50000,  type: "PAYMENT", status: "PAID", description: "Massages bien-être x2 — Spa Astoria", category: "FNB" },
-      // Charges salariales
-      { amount: -480000, type: "EXPENSE", status: "PAID", description: "Salaire — Jean-Baptiste Kouamé (Chef Cuisine)", category: "SALARY" },
-      { amount: -220000, type: "EXPENSE", status: "PAID", description: "Salaire — Aïssatou Diallo (Réceptionniste Principale)", category: "SALARY" },
-      { amount: -215000, type: "EXPENSE", status: "PAID", description: "Salaire — Traore Awa (Réceptionniste)", category: "SALARY" },
-      { amount: -210000, type: "EXPENSE", status: "PAID", description: "Salaire — Koné Adama (Barman)", category: "SALARY" },
-      { amount: -195000, type: "EXPENSE", status: "PAID", description: "Salaire — Bogui Franck (Maintenance)", category: "SALARY" },
-      { amount: -180000, type: "EXPENSE", status: "PAID", description: "Salaire — Marie-Claire Yao (Gouvernante)", category: "SALARY" },
-      { amount: -160000, type: "EXPENSE", status: "PAID", description: "Salaire — Ouattara Mamadou (Sécurité)", category: "SALARY" },
-      // Charges fixes
-      { amount: -185000, type: "EXPENSE", status: "PAID", description: "Abonnement Électricité CIE — Mai 2026", category: "UTILITIES" },
-      { amount: -42000,  type: "EXPENSE", status: "PAID", description: "Abonnement Internet Fibre Orange CI", category: "UTILITIES" },
-      { amount: -28000,  type: "EXPENSE", status: "PAID", description: "Abonnement Eau SODECI — Mai 2026", category: "UTILITIES" },
-      // Approvisionnements
-      { amount: -95000,  type: "EXPENSE", status: "PAID", description: "Achat Linge — Draps & serviettes (lot 50)", category: "RESTOCK" },
-      { amount: -145000, type: "EXPENSE", status: "PAID", description: "Approvisionnement F&B — Marché Adjamé + Grand Surface", category: "RESTOCK" },
-      { amount: -62000,  type: "EXPENSE", status: "PAID", description: "Approvisionnement Bar — Vins, Spiritueux, Bières", category: "RESTOCK" },
-      { amount: -35000,  type: "EXPENSE", status: "PAID", description: "Produits d'entretien et ménagers (mensuel)", category: "RESTOCK" },
-    ],
+    data: transactionsData.map((t) => ({ ...t, userId: adminUser.id }))
   });
   console.log("✓ Comptabilité");
 
