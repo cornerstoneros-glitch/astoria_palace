@@ -490,6 +490,22 @@ async function main() {
 
   console.log("✓ Promotions & événements");
   console.log("\n🎉 Seeding terminé avec succès ! Hôtel Astoria Palace est prêt.");
+  // ── 19. Services (Boissons & Extras) ──────────────────────────────────────
+  await prisma.service.createMany({
+    data: [
+      { name: "Eau Minérale Awa (1.5L)", description: "Bouteille d'eau plate locale", price: 1000, siteId: site.id },
+      { name: "Sodas (Coca, Fanta, Sprite)", description: "Canette de soda 33cl bien fraîche", price: 1500, siteId: site.id },
+      { name: "Jus de fruits naturels", description: "Ananas, Passion, Bissap ou Gingembre", price: 2500, siteId: site.id },
+      { name: "Café Espresso / Thé", description: "Boisson chaude servie avec des petits fours", price: 2000, siteId: site.id },
+      { name: "Bière locale (Bock 65cl)", description: "Bière blonde très glacée", price: 2000, siteId: site.id },
+      { name: "Bouteille de Vin Rouge", description: "Bordeaux AOC, sélection de la cave", price: 15000, siteId: site.id },
+      { name: "Bouteille de Champagne", description: "Moët & Chandon Brut Impérial", price: 80000, siteId: site.id },
+      { name: "Cocktail de fruits frais", description: "Mix de fruits de saison sans alcool", price: 3500, siteId: site.id },
+      { name: "Service en chambre (Room Service)", description: "Frais de livraison pour les repas et boissons en chambre", price: 3000, siteId: site.id },
+    ]
+  });
+  console.log("✓ Services & Boissons");
+
 }
 
 main()
