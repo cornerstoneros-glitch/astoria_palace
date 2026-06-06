@@ -95,12 +95,12 @@ async function generateManuals() {
           new Paragraph({ text: `Manuel d'Utilisation SGHI - ${siteName}`, heading: HeadingLevel.HEADING_2, alignment: AlignmentType.CENTER, spacing: { after: 600 } }),
           new Paragraph({ children: [new TextRun({ text: `Bonjour ${userName},`, bold: true, size: 28 })], spacing: { after: 300 } }),
           new Paragraph({ children: [new TextRun({ text: `Ce manuel a été généré spécifiquement pour votre profil. En tant que ` }), new TextRun({ text: position, bold: true }), new TextRun({ text: `, votre rôle est essentiel pour le bon fonctionnement de l'établissement.` })], spacing: { after: 300 } }),
-          new Paragraph({ text: roleDescription, italics: true, spacing: { after: 600 } }),
+          new Paragraph({ children: [new TextRun({ text: roleDescription, italics: true })], spacing: { after: 600 } }),
           new Paragraph({ text: "VOS RESPONSABILITÉS PRINCIPALES", heading: HeadingLevel.HEADING_3, spacing: { before: 400, after: 200 } }),
           ...responsibilities.map(r => new Paragraph({ text: r, bullet: { level: 0 } })),
           new Paragraph({ text: "GUIDE D'UTILISATION DU LOGICIEL", heading: HeadingLevel.HEADING_3, spacing: { before: 600, after: 200 } }),
           ...dashboardInstructions.map(inst => new Paragraph({ text: inst, bullet: { level: 0 }, spacing: { after: 100 } })),
-          new Paragraph({ text: "En cas de problème ou de bug technique avec le système, veuillez contacter l'administrateur informatique.", italics: true, spacing: { before: 800 } })
+          new Paragraph({ children: [new TextRun({ text: "En cas de problème ou de bug technique avec le système, veuillez contacter l'administrateur informatique.", italics: true })], spacing: { before: 800 } })
         ],
       }],
     });
